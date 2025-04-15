@@ -1,0 +1,34 @@
+package lucastexiera.com.msfinancemonify.service;
+
+import lucastexiera.com.msfinancemonify.dto.CategoryDTO;
+import lucastexiera.com.msfinancemonify.model.Category;
+import lucastexiera.com.msfinancemonify.repositories.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+
+    public List<Category> findAll() {
+        return categoryRepository.findAll();
+    }
+
+    public Category save(CategoryDTO category) {
+        var newCategory = createNewCategory(category);
+        return categoryRepository.save(newCategory);
+    }
+
+    private Category createNewCategory(CategoryDTO category) {
+        return new  Category(
+                 null,
+                category.name(),
+                1L
+        );
+    }
+}

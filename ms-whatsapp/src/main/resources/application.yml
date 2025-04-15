@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: msWhatsapp
+  config:
+    import: optional:classpath:application-secrets.yml
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+server:
+  port: 8081

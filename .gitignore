@@ -1,6 +1,8 @@
 # Compiled class file
 *.class
 
+**/src/main/resources/application-secrets.yml
+
 # Log file
 *.log
 
