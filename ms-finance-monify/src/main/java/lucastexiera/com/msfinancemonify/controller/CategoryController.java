@@ -18,8 +18,8 @@ public class CategoryController {
 
 
     @GetMapping
-    public ResponseEntity<List<Category>> findAll() {
-        var listCategory =  categoryService.findAll();
+    public ResponseEntity<List<Category>> findAll(Long id) {
+        var listCategory =  categoryService.findCategoriesByUserId(id);
         return ResponseEntity.ok(listCategory);
     }
 

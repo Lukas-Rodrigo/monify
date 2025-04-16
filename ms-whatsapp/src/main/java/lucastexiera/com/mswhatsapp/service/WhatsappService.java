@@ -1,10 +1,11 @@
 package lucastexiera.com.mswhatsapp.service;
 
 
-import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotRequest;
+import lucastexiera.com.mswhatsapp.dto.users.UserRequest;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookResponse;
 import lucastexiera.com.mswhatsapp.infra.openfeign.ChatbotClient;
+import lucastexiera.com.mswhatsapp.infra.openfeign.UserClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class WhatsappService {
     @Autowired
     private ChatbotClient chatbotClient;
 
+    @Autowired
+    private UserClient userClient;
+
 
     public void processIncomingMessage(WhatsappWebhookResponse payload) {
 
@@ -54,8 +58,13 @@ public class WhatsappService {
             String from = message.from();
             String userMessage = message.text().body();
 
-            var messageChatBot = chatbotClient.sendoMessageToChatBot(new ChatBotRequest(userMessage));
-            sendMessage(from, messageChatBot.message());
+            log.info("from: {}", from);
+            log.info("userMessage: {}", userMessage);
+
+            var dataFromWhatsappUser = new UserRequest("User1", from);
+            var listCategory = userClient.findUserCategories(dataFromWhatsappUser);
+            log.info("listCategory: {}", listCategory.getBody());
+
         } catch (Exception e) {
             e.printStackTrace();
         }

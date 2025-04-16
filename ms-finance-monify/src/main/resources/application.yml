@@ -1,6 +1,7 @@
 spring:
   application:
     name: ms-finance-monify
+
   datasource:
     url: jdbc:h2:mem:monifydb
     driver-class-name: org.h2.Driver

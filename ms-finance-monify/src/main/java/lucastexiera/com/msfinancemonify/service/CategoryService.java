@@ -15,8 +15,8 @@ public class CategoryService {
     private CategoryRepository categoryRepository;
 
 
-    public List<Category> findAll() {
-        return categoryRepository.findAll();
+    public List<Category> findCategoriesByUserId(Long userId) {
+        return categoryRepository.findByUserId(userId);
     }
 
     public Category save(CategoryDTO category) {
