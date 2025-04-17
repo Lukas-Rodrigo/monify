@@ -5,10 +5,7 @@ import lucastexiera.com.msfinancemonify.dto.CategoryDTO;
 import lucastexiera.com.msfinancemonify.dto.UserResponse;
 import lucastexiera.com.msfinancemonify.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,10 +19,10 @@ public class UserHookController {
     @Autowired
     private CategoryService categoryService;
 
-    @PostMapping("findCategoriesByUserId")
-    public List<CategoryDTO> findCategoriesByUserId(@RequestBody UserResponse userResponse) {
-        log.info("Data users: {}", userResponse);
-        return categoryService.findCategoriesByUserId(userResponse.userId())
+    @GetMapping("/{userId}")
+    public List<CategoryDTO> findCategoriesByUserId(@PathVariable Long userId) {
+        log.info("user id: {}", userId);
+        return categoryService.findCategoriesByUserId(userId)
                 .stream()
                 .map(category -> new CategoryDTO(category.getName()))
                 .collect(Collectors.toList());

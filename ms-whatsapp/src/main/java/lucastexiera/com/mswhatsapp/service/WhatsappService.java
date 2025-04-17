@@ -61,7 +61,7 @@ public class WhatsappService {
             log.info("from: {}", from);
             log.info("userMessage: {}", userMessage);
 
-            var dataFromWhatsappUser = new UserRequest("User1", from);
+            var dataFromWhatsappUser = new UserRequest(from);
             var listCategory = userClient.findUserCategories(dataFromWhatsappUser);
             log.info("listCategory: {}", listCategory.getBody());
 
