@@ -2,10 +2,12 @@ package lucastexiera.com.msfinancemonify.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import lucastexiera.com.msfinancemonify.dto.CategoryDTO;
-import lucastexiera.com.msfinancemonify.dto.UserResponse;
 import lucastexiera.com.msfinancemonify.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserHookController {
 
+
     @Autowired
     private CategoryService categoryService;
 
@@ -24,7 +27,7 @@ public class UserHookController {
         log.info("user id: {}", userId);
         return categoryService.findCategoriesByUserId(userId)
                 .stream()
-                .map(category -> new CategoryDTO(category.getName()))
+                .map(category -> new CategoryDTO(category.getId(), category.getName()))
                 .collect(Collectors.toList());
     }
 }

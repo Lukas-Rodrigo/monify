@@ -1,4 +1,4 @@
-package lucastexiera.com.mschatbotopenai.dto;
+package lucastexiera.com.mschatbotopenai.dto.chatbot;
 
 import java.math.BigDecimal;
 

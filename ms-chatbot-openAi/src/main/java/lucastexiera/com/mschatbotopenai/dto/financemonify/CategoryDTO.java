@@ -1,7 +1,8 @@
-package lucastexiera.com.msmonifygateway.dto;
+package lucastexiera.com.mschatbotopenai.dto.financemonify;
 
 public record CategoryDTO(
         Long id,
         String name
+
 ) {
 }
