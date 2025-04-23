@@ -13,4 +13,6 @@ public interface ChatbotClient {
 
     @PostMapping("v1/chatbot/messages/whatsapp")
     public ChatBotResponse sendoMessageToChatBot(@RequestBody ChatBotRequest message);
+
+    
 }

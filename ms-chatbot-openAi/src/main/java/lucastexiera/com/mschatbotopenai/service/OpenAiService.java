@@ -2,7 +2,7 @@ package lucastexiera.com.mschatbotopenai.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequestt;
+import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
@@ -35,45 +35,59 @@ public class OpenAiService {
     private String OPENAI_URL;
 
     @Autowired
-    private FinanceClient financeClient;
-
-    @Autowired
     private MonifyGatewayClient gatewayClient;
 
     @Autowired
     private ConversationService conversationService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ChatFunctionHandlerService functionHandlerService;
+
 
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
-
+        ChatbotMessage chatbotMessage = null;
         var userListCategories = gatewayClient.
                 findCategoriesByPhoneNumber(userMessage.from()).getBody();
+
+        log.info("userListCategories={}", userListCategories);
 
         var userConversation = conversationService.saveUserMessage(userMessage.from(), userMessage.message());
         var request = OpenAiRequestFactory.instance(userConversation, userListCategories);
 
-        HttpEntity<OpenAiMessageRequestt> requestHttpEntity = new HttpEntity<>(request);
+        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
 
-        var OpenAiResponse = restTemplate.exchange(
+        var openAiResponse = restTemplate.exchange(
                 OPENAI_URL,
                 HttpMethod.POST,
                 requestHttpEntity,
                 OpenAiMessageResponse.class
         ).getBody();
 
-        var typeOpenAIMessage = OpenAiResponse.output().get(0).type();
-        ChatbotMessage chatbotMessage;
+        var typeOpenAIMessage = openAiResponse.output().get(0).type();
 
-        if (typeOpenAIMessage.equals("function_call") ) {
+        // refatorar
+        if (typeOpenAIMessage.equals("function_call")) {
+            var typeFunctionCall = openAiResponse.output().get(0).name();
+            log.info("function type, {}", typeFunctionCall);
+
             try {
-                return SaveNewExpense(OpenAiResponse, userListCategories, userMessage.from());
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Erro ao processar dados da despesa", e);
+                if (typeFunctionCall.equals("enviar_despesa")) {
+                    return functionHandlerService.SaveNewExpense(openAiResponse, userListCategories, userMessage.from());
+
+                } else if (typeFunctionCall.equals("create_category")) {
+                    return functionHandlerService.saveNewCategory(openAiResponse, userMessage.from());
+
+                } else if (typeFunctionCall.equals("delete_category")) {
+                    return functionHandlerService.deleteCategory(openAiResponse, userMessage.from());
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
         } else {
-            var contentMessageChatBot = OpenAiResponse.output().get(0).content().get(0).text();
+            var contentMessageChatBot = openAiResponse.output().get(0).content().get(0).text();
             chatbotMessage = new ChatbotMessage(contentMessageChatBot);
         }
 
@@ -81,42 +95,6 @@ public class OpenAiService {
         return chatbotMessage;
 
     }
-
-    private ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
-        var expenseToBeSavedJson = OpenAiResponse.output().get(0).arguments();
-        ChatbotMessage chatbotMessage;
-
-        log.info("Despesa a ser salva: {}", expenseToBeSavedJson);
-
-        var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, NewExpense.class);
-
-        boolean categoriaValida = userListCategories.stream()
-                .anyMatch(c -> c.id().equals(expenseToBeSaved.category_id()));
-
-
-        log.info("Categoria valida: {}", categoriaValida);
-
-        if (!categoriaValida) {
-            String categoriasDisponiveis = userListCategories.stream()
-                    .map(c -> "- " + c.name())
-                    .collect(Collectors.joining("\n"));
-
-            chatbotMessage = new ChatbotMessage("""
-                        A categoria que você informou não é válida. 🧐
-                        Por favor, escolha uma das categorias disponíveis:
-
-                        %s
-                        """.formatted(categoriasDisponiveis));
-            conversationService.saveAssistantMessage(from, chatbotMessage.message());
-            return chatbotMessage;
-        }
-        financeClient.saveNewExpense(expenseToBeSaved);
-        chatbotMessage = new ChatbotMessage("Prontinho! Sua despesa foi salva. Quer cadastrar mais alguma?");
-        conversationService.saveAssistantMessage(from, chatbotMessage.message());
-
-        return chatbotMessage;
-    }
-
 
 
 

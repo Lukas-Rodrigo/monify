@@ -1,6 +1,6 @@
 package lucastexiera.com.mschatbotopenai.controller;
 
-import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequestt;
+import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.model.ChatMessage;
@@ -19,7 +19,7 @@ public class ControllerTest {
 
     @GetMapping("/conversation")
     public Conversation retornConversationObject() {
-        // Criar mensagens mockadas
+
         ChatMessage msg1 = new ChatMessage();
         msg1.setId(1L);
         msg1.setSender("user");
@@ -32,7 +32,7 @@ public class ControllerTest {
         msg2.setMessage("Certo! Registrei uma despesa de R$50,00 na categoria alimentação.");
         msg2.setTimestamp(LocalDateTime.now().minusMinutes(9));
 
-        // Criar conversa mockada
+
         Conversation conversation = new Conversation();
         conversation.setId(1L);
         conversation.setUserPhoneNumber("11999999999");
@@ -42,9 +42,9 @@ public class ControllerTest {
     }
 
     @GetMapping
-    public OpenAiMessageRequestt retornOpenAiMessageObject() {
+    public OpenAiMessageRequest retornOpenAiMessageObject() {
 
-        // Criar mensagens mockadas
+
         ChatMessage msg1 = new ChatMessage();
         msg1.setId(1L);
         msg1.setSender("user");
@@ -57,13 +57,10 @@ public class ControllerTest {
         msg2.setMessage("Certo! Registrei uma despesa de R$50,00 na categoria alimentação.");
         msg2.setTimestamp(LocalDateTime.now().minusMinutes(9));
 
-        // Criar conversa mockada
         Conversation conversation = new Conversation();
         conversation.setId(1L);
         conversation.setUserPhoneNumber("11999999999");
         conversation.setMessages(List.of(msg1, msg2));
-
-
 
 
         List<CategoryDTO> categoryDTOList = new ArrayList<>();

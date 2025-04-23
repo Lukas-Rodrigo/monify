@@ -3,6 +3,7 @@ package lucastexiera.com.mswhatsapp.dto.whatsapp;
 import java.util.List;
 
 public record WhatsappWebhookResponse(
+
         List<Entry> entry
 ) {
     public record Entry(List<Change> changes) {}

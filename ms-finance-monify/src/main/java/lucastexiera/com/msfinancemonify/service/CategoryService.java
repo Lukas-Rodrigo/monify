@@ -27,8 +27,13 @@ public class CategoryService {
     private Category createNewCategory(CategoryDTO category) {
         return new  Category(
                  null,
-                category.name(),
+                category.category_name(),
                 1L
         );
+    }
+
+    public void deleteCategory(CategoryDTO category) {
+        var categoryId = categoryRepository.findById(category.category_id()).orElseThrow();
+        categoryRepository.deleteById(categoryId.getId());
     }
 }

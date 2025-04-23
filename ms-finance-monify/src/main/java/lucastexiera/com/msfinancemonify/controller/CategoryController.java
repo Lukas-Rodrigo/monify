@@ -24,9 +24,15 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Category> saveCategory(@RequestBody CategoryDTO category) {
-        var newCategory = categoryService.save(category);
-        return ResponseEntity.ok(newCategory);
+    public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO category) {
+        categoryService.save(category);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteCategory(@RequestBody CategoryDTO category) {
+        categoryService.deleteCategory(category);
+        return ResponseEntity.noContent().build();
     }
 
 }

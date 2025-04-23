@@ -36,6 +36,7 @@ public class WhatsappService {
 
 
 
+
     public void processIncomingMessage(WhatsappWebhookResponse payload) {
 
         log.info("dados recebidos: {}", payload);
@@ -52,7 +53,7 @@ public class WhatsappService {
             if (messageValues == null || messageValues.messages() == null || messageValues.messages().isEmpty()) return;
 
             var message = messageValues.messages().get(0);
-            String from = message.from();
+            var from = message.from();
             String userMessage = message.text().body();
 
             log.info("from: {}", from);
@@ -62,7 +63,7 @@ public class WhatsappService {
             var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
 
             log.info("chatBotMessage: {}", chatBotMessage);
-            sendMessage(from,chatBotMessage.message());
+//            sendMessage(from,chatBotMessage.message());
 
         } catch (Exception e) {
             e.printStackTrace();

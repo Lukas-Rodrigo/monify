@@ -1,50 +1,104 @@
 package lucastexiera.com.mschatbotopenai.dto.chatbot;
 
 import java.util.List;
+import java.util.Map;
 
 public record OpenAiMessageRequest(
         String model,
         List<Message> input,
-        Text text
+        List<Tool> tools,
+        Text text,
+        String tool_choice
 ) {
-    public record Message(
-            String role,
-            List<Content> content
-    ) {}
+    public record Message(String role, List<Content> content) {}
 
-    public record Content(
-            String type,
-            String text
-    ) {
-        public static Content of(String text) {
-            return new Content("input_text", text);
+    public record Content(String type, String text) {
+
+        public static Content fromRole(String text, String role) {
+            String type = "assistant".equals(role) ? "output_text" : "input_text";
+            return new Content(type, text);
         }
+
     }
 
-    public record Text(
-            Format format
+
+
+    public record Text(Format format) {}
+
+    public record Format(String type) {}
+
+    public record Tool(
+            String type,
+            String name,
+            String description,
+            Parameters parameters,
+            boolean strict
     ) {}
 
-    public record Format(
-            String type
+    public record Parameters(
+            String type,
+            List<String> required,
+            Map<String, Property> properties,
+            boolean additionalProperties
     ) {}
 
-    public static OpenAiMessageRequest of(List<Message> input) {
-        var chatAssistant = new Message(
-                "system",
-                List.of(new Content("input_text",
-                        "Você é um chatbot que salva gastos e me dá relatórios. Quando o usuário falar que quer um relatório ou que gastou algo, isso deve ser salvo no banco de dados. Retorne de forma gentil para o usuário."
+
+    public record Property(String type, String description) {}
+
+    /*public static OpenAiMessageRequestt requestInstance(Conversation conversation, List<CategoryDTO> userCategories) {
+
+        String formattedCategories = userCategories.stream()
+                .map(cat -> "- " + cat)
+                .collect(Collectors.joining("\n"));
+
+        Tool enviarDespesa = new Tool(
+                "function",
+                "enviar_despesa",
+                "Envia os dados formatados da despesa para o backend de acordo com a categoria selecionada",
+                new Parameters(
+                        "object",
+                        List.of("description", "amount", "category_id"),
+                        new Properties(
+                                new Property("string", "Descrição da despesa"),
+                                new Property("number", "Valor da despesa"),
+                                new Property("number", "Identificador da categoria selecionada")
+                        ),
+                        false
+                ),
+                true
+        );
+
+        Message systemMessage = new Message(
+                "assistant",
+                List.of(new Content(
+                        "Você é um assistente financeiro amigável chamado Monify. Seu objetivo é ajudar o usuário a registrar despesas de forma prática e eficiente. " +
+                                "Sempre que o usuário mencionar uma nova despesa, você deve extrair a descrição, o valor (em R$) e a categoria correspondente. " +
+                                "Utilize a função de ferramenta 'enviar_despesa' para registrar essas informações. " +
+                                "As categorias disponíveis para este usuário são: " + formattedCategories + ". " +
+                                "Se a categoria mencionada pelo usuário não estiver na lista, peça gentilmente para ele escolher uma das disponíveis. " +
+                                "Se o usuário não mencionar o valor do gasto, peça gentilmente para ele."
+                , "assistant"))
+        );
+
+        List<Message> allMessages = new ArrayList<>();
+        allMessages.add(systemMessage);
+
+        // Aqui adaptamos as mensagens da conversa
+        List<Message> historyMessages = conversation.getMessages().stream()
+                .map(m -> new Message(
+                        m.getSender(),
+                        List.of(new Content(m.getMessage(), m.getSender()))
                 ))
-        );
+                .toList();
 
-        List<Message> allMessages = new java.util.ArrayList<>();
-        allMessages.add(chatAssistant);
-        allMessages.addAll(input);
+        allMessages.addAll(historyMessages);
 
-        return new OpenAiMessageRequest(
-                "gpt-3.5-turbo",
+        return new OpenAiMessageRequestt(
+                "gpt-4.1",
                 allMessages,
-                new Text(new Format("text"))
+                List.of(enviarDespesa),
+                new Text(new Format("text")),
+                "auto"
         );
-    }
+    }*/
 }

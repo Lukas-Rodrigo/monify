@@ -1,7 +1,5 @@
 package lucastexiera.com.mswhatsapp.controller;
 
-import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotResponse;
-import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookResponse;
 import lucastexiera.com.mswhatsapp.service.WhatsappService;
 import org.slf4j.Logger;
@@ -46,6 +44,5 @@ public class WebhookWhatsappController {
         whatsappService.processIncomingMessage(payload);
         return ResponseEntity.ok().build();
     }
-
 
 }
