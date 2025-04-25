@@ -63,7 +63,7 @@ public class WhatsappService {
             var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
 
             log.info("chatBotMessage: {}", chatBotMessage);
-//            sendMessage(from,chatBotMessage.message());
+            sendMessage(from,chatBotMessage.message());
 
         } catch (Exception e) {
             e.printStackTrace();

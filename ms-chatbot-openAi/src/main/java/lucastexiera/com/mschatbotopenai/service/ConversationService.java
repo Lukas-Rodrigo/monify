@@ -1,5 +1,6 @@
 package lucastexiera.com.mschatbotopenai.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lucastexiera.com.mschatbotopenai.model.ChatMessage;
 import lucastexiera.com.mschatbotopenai.model.Conversation;
 import lucastexiera.com.mschatbotopenai.repositories.ConversationRepository;
@@ -32,7 +33,7 @@ public class ConversationService {
         return conversationRepository.save(conversation);
     }
 
-    public void saveAssistantMessage(String userPhoneNumber, String message) {
+    public Conversation saveAssistantMessage(String userPhoneNumber, String message) {
         ChatMessage assistantMsg = new ChatMessage();
         assistantMsg.setSender("assistant");
         assistantMsg.setMessage(message);
@@ -44,7 +45,13 @@ public class ConversationService {
 
         assistantMsg.setConversation(conversation);
         conversation.getMessages().add(assistantMsg);
-        conversationRepository.save(conversation);
+        return conversationRepository.save(conversation);
+    }
+
+    public Conversation findByUserPhoneNumber(String userPhoneNumber) {
+        return conversationRepository.findByUserPhoneNumber(userPhoneNumber).orElseThrow(
+                () -> new EntityNotFoundException("User phone number " + userPhoneNumber + " not found")
+        );
     }
 
     private Conversation createNewConversation(String userPhoneNumber) {

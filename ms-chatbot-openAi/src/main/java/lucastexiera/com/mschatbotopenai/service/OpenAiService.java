@@ -46,7 +46,6 @@ public class OpenAiService {
 
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
-        ChatbotMessage chatbotMessage = null;
         var userListCategories = gatewayClient.
                 findCategoriesByPhoneNumber(userMessage.from()).getBody();
 
@@ -74,7 +73,6 @@ public class OpenAiService {
             try {
                 if (typeFunctionCall.equals("enviar_despesa")) {
                     return functionHandlerService.SaveNewExpense(openAiResponse, userListCategories, userMessage.from());
-
                 } else if (typeFunctionCall.equals("create_category")) {
                     return functionHandlerService.saveNewCategory(openAiResponse, userMessage.from());
 
@@ -86,12 +84,12 @@ public class OpenAiService {
                 e.printStackTrace();
             }
 
-        } else {
-            var contentMessageChatBot = openAiResponse.output().get(0).content().get(0).text();
-            chatbotMessage = new ChatbotMessage(contentMessageChatBot);
         }
+        var contentMessageChatBot = openAiResponse.output().get(0).content().get(0).text();
+        var chatbotMessage = new ChatbotMessage(contentMessageChatBot);
 
         conversationService.saveAssistantMessage(userMessage.from(), chatbotMessage.message());
+        log.info("Normal Conversation={}", chatbotMessage.message());
         return chatbotMessage;
 
     }

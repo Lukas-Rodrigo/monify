@@ -1,6 +1,5 @@
 package lucastexiera.com.mschatbotopenai.dto.chatbot;
 
-import lucastexiera.com.mschatbotopenai.controller.OpenAiController;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.model.Conversation;
 import org.slf4j.Logger;
@@ -11,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class OpenAiRequestFactory {
+public class OpenAiFactoryTest {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiRequestFactory.class);
 
@@ -39,7 +38,7 @@ public class OpenAiRequestFactory {
         );
     }
 
-    public static List<OpenAiMessageRequest.Message> mapConversationHistory(Conversation conversation) {
+    private static List<OpenAiMessageRequest.Message> mapConversationHistory(Conversation conversation) {
         return conversation.getMessages().stream()
                 .map(m -> new OpenAiMessageRequest.Message(
                         m.getSender(),
@@ -48,7 +47,7 @@ public class OpenAiRequestFactory {
                 .toList();
     }
 
-    public static OpenAiMessageRequest.Message createSystemMessage(List<CategoryDTO>  userCategories ) {
+    private static OpenAiMessageRequest.Message createSystemMessage(List<CategoryDTO>  userCategories ) {
         String formattedCategories = userCategories.stream()
                 .map(cat -> "- " + cat)
                 .collect(Collectors.joining("\n"));
@@ -132,6 +131,4 @@ public class OpenAiRequestFactory {
                 true
         );
     }
-
-
 }
