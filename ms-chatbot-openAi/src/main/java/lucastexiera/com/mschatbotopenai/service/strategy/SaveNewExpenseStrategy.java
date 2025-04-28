@@ -1,6 +1,7 @@
 package lucastexiera.com.mschatbotopenai.service.strategy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;

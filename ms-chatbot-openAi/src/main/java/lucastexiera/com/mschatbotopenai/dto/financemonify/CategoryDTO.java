@@ -2,7 +2,7 @@ package lucastexiera.com.mschatbotopenai.dto.financemonify;
 
 public record CategoryDTO(
         Long category_id,
-        String category_name
+        String name
 
 ) {
 }

@@ -27,7 +27,7 @@ public class CategoryService {
     private Category createNewCategory(CategoryDTO category) {
         return new  Category(
                  null,
-                category.category_name(),
+                category.name(),
                 1L
         );
     }

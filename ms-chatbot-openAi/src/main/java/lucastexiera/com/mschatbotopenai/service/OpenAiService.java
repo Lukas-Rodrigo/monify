@@ -1,16 +1,13 @@
 package lucastexiera.com.mschatbotopenai.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
-import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
-import lucastexiera.com.mschatbotopenai.dto.financemonify.NewExpense;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
-import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
+import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class OpenAiService {
@@ -45,12 +40,15 @@ public class OpenAiService {
     @Autowired
     private ChatFunctionHandlerService functionHandlerService;
 
-    private final Map<String, ChatBotFunctionStrategy> mapStrategy = Map.of(
-            "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
-            "create_category", new SaveNewExpenseStrategy(functionHandlerService)
-    );
+    private Map<String, ChatBotFunctionStrategy> mapStrategy;
 
-
+    @PostConstruct
+    public void init() {
+        mapStrategy = Map.of(
+                "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
+                "create_category", new CreateCategoryStrategy(functionHandlerService)
+        );
+    }
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
         var userListCategories = gatewayClient.
@@ -77,7 +75,9 @@ public class OpenAiService {
             log.info("function type, {}", typeFunctionCall);
 
             try {
+                log.info("chegou aqui hahahahahahah");
                 return mapStrategy.get(typeFunctionCall).handle(openAiResponse, userListCategories, userMessage);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
