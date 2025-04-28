@@ -2,7 +2,7 @@ package lucastexiera.com.mswhatsapp.dto.whatsapp;
 
 import java.util.List;
 
-public record WhatsappWebhookResponse(
+public record WhatsappWebhookRequest(
 
         List<Entry> entry
 ) {

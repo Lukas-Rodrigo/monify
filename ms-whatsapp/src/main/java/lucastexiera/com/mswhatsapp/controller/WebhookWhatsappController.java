@@ -1,6 +1,6 @@
 package lucastexiera.com.mswhatsapp.controller;
 
-import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookResponse;
+import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
 import lucastexiera.com.mswhatsapp.service.WhatsappService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class WebhookWhatsappController {
 
     @Autowired
-    private WhatsappService whatsappService;
+    private  WhatsappService whatsappService;
 
     @Value("${whatsapp.api.myTokenVerification}")
     private String MY_TOKEN_VERIFICATION;
@@ -40,7 +40,7 @@ public class WebhookWhatsappController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> receiveWhatsappMessage(@RequestBody WhatsappWebhookResponse payload) {
+    public ResponseEntity<Void> receiveWhatsappMessage(@RequestBody WhatsappWebhookRequest payload) {
         whatsappService.processIncomingMessage(payload);
         return ResponseEntity.ok().build();
     }

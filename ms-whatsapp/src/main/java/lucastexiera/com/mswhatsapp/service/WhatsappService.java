@@ -3,7 +3,7 @@ package lucastexiera.com.mswhatsapp.service;
 
 import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotRequest;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
-import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookResponse;
+import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
 import lucastexiera.com.mswhatsapp.infra.openfeign.ChatbotClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Validated
 public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
@@ -35,39 +37,29 @@ public class WhatsappService {
     private ChatbotClient chatbotClient;
 
 
-
-
-    public void processIncomingMessage(WhatsappWebhookResponse payload) {
+    public void processIncomingMessage(WhatsappWebhookRequest payload) {
 
         log.info("dados recebidos: {}", payload);
 
-        try {
+        var entryList = payload.entry();
 
-            var entryList = payload.entry();
-            if (entryList == null || entryList.isEmpty()) return;
+        var changeList = entryList.get(0).changes();
 
-            var changeList = entryList.get(0).changes();
-            if (changeList == null || changeList.isEmpty()) return;
+        var messageValues = changeList.get(0).value();
 
-            var messageValues = changeList.get(0).value();
-            if (messageValues == null || messageValues.messages() == null || messageValues.messages().isEmpty()) return;
+        var message = messageValues.messages().get(0);
+        var from = message.from();
+        String userMessage = message.text().body();
 
-            var message = messageValues.messages().get(0);
-            var from = message.from();
-            String userMessage = message.text().body();
+        log.info("from: {}", from);
+        log.info("userMessage: {}", userMessage);
 
-            log.info("from: {}", from);
-            log.info("userMessage: {}", userMessage);
+        var request = new ChatBotRequest(userMessage, from);
+        var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
 
-            var request = new ChatBotRequest(userMessage, from);
-            var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
+        log.info("chatBotMessage: {}", chatBotMessage);
+        sendMessage(from, chatBotMessage.message());
 
-            log.info("chatBotMessage: {}", chatBotMessage);
-            sendMessage(from,chatBotMessage.message());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void sendMessage(String to, String message) {
