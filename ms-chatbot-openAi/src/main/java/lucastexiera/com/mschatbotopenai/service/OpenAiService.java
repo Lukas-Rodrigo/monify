@@ -11,6 +11,7 @@ import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
+import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,11 @@ public class OpenAiService {
 
     @Autowired
     private ChatFunctionHandlerService functionHandlerService;
+
+    private final Map<String, ChatBotFunctionStrategy> mapStrategy = Map.of(
+            "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
+            "create_category", new SaveNewExpenseStrategy(functionHandlerService)
+    );
 
 
 
@@ -65,21 +72,12 @@ public class OpenAiService {
 
         var typeOpenAIMessage = openAiResponse.output().get(0).type();
 
-        // refatorar
         if (typeOpenAIMessage.equals("function_call")) {
             var typeFunctionCall = openAiResponse.output().get(0).name();
             log.info("function type, {}", typeFunctionCall);
 
             try {
-                if (typeFunctionCall.equals("enviar_despesa")) {
-                    return functionHandlerService.SaveNewExpense(openAiResponse, userListCategories, userMessage.from());
-                } else if (typeFunctionCall.equals("create_category")) {
-                    return functionHandlerService.saveNewCategory(openAiResponse, userMessage.from());
-
-                } else if (typeFunctionCall.equals("delete_category")) {
-                    return functionHandlerService.deleteCategory(openAiResponse, userMessage.from());
-                }
-
+                return mapStrategy.get(typeFunctionCall).handle(openAiResponse, userListCategories, userMessage);
             } catch (Exception e) {
                 e.printStackTrace();
             }
