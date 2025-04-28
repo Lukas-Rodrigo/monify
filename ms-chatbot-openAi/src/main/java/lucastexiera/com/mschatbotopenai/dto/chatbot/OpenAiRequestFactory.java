@@ -64,7 +64,8 @@ public class OpenAiRequestFactory {
                                         "Utilize a função de ferramenta 'enviar_despesa' para registrar essas informações. " +
                                         "As categorias disponíveis para este usuário são: " + formattedCategories + ". " +
                                         "Se a categoria mencionada pelo usuário não estiver na lista, peça gentilmente para ele escolher uma das disponíveis. " +
-                                        "Se o usuário não mencionar o valor do gasto, peça gentilmente para ele.")
+                                        "Se o usuário não mencionar o valor do gasto, peça gentilmente para ele." +
+                                        "Se o usuario querer incluir uma categoria que ja esta na lista, fale gentilmente que ele ja possui essa categoria.")
                         , "assistant")
                 ));
 
