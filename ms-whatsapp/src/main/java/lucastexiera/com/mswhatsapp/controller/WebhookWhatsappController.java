@@ -1,5 +1,7 @@
 package lucastexiera.com.mswhatsapp.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
 import lucastexiera.com.mswhatsapp.service.WhatsappService;
 import org.slf4j.Logger;
@@ -40,7 +42,7 @@ public class WebhookWhatsappController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> receiveWhatsappMessage(@RequestBody WhatsappWebhookRequest payload) {
+    public ResponseEntity<Void> receiveWhatsappMessage(@Valid @NotNull @RequestBody  WhatsappWebhookRequest payload) {
         whatsappService.processIncomingMessage(payload);
         return ResponseEntity.ok().build();
     }

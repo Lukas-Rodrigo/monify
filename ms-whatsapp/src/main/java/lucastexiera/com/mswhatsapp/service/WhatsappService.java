@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@Validated
 public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
