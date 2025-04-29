@@ -35,6 +35,22 @@ public class ExpenseService {
         return expenseRepository.save(newExpense);
     }
 
+    public void updateLastExpense(Long userId, ExpenseDTO dto) {
+        Expense lastExpense = expenseRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new RuntimeException("Nenhuma despesa encontrada para o usuário"));
+
+        Category category = categoryRepository.findById(dto.category_id())
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        lastExpense.setDescription(dto.description());
+        lastExpense.setAmount(dto.amount());
+        lastExpense.setCategory(category);
+
+        expenseRepository.save(lastExpense);
+    }
+
+
+
     private Expense CreateNewExpense(ExpenseDTO newExpense, Category category) {
         return new Expense(null,
                 newExpense.description(),

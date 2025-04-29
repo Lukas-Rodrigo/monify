@@ -3,7 +3,7 @@ package lucastexiera.com.mschatbotopenai.service;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
-import lucastexiera.com.mschatbotopenai.dto.financemonify.NewExpense;
+import lucastexiera.com.mschatbotopenai.dto.financemonify.ExpenseDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +33,34 @@ public class AnswersForUsersService {
     private String OPENAI_URL;
 
 
-    public ChatbotMessage newExpenseMessage(NewExpense newExpense, CategoryDTO categoryName) {
+    public ChatbotMessage newExpenseMessage(ExpenseDTO newExpense, CategoryDTO categoryName) {
         var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de registrar uma nova despesa. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando o registro da despesa.\n" +
                 "Responda apenas com uma mensagem amigável ao usuário confirmando o registro da despesa. Não forneça análises ou informações adicionais.\n" +
                 "despesa registrada: " + newExpense.description() + " R$ " + newExpense.amount() + " na categoria: " + categoryName
 
         ;
+        var request = instanceAnswersForUser(message);
+
+        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
+
+        var openAiResponse = restTemplate.exchange(
+                OPENAI_URL,
+                HttpMethod.POST,
+                requestHttpEntity,
+                OpenAiMessageResponse.class
+        ).getBody();
+
+        log.info("OpenAiResponse: {}", openAiResponse);
+
+        return new ChatbotMessage(openAiResponse.output().get(0).content().get(0).text());
+    }
+
+    public ChatbotMessage updateLastExpense(ExpenseDTO newExpense, CategoryDTO categoryName) {
+        var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de Atualizar uma nova despesa. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando a atualizacao da despesa.\n" +
+                "Responda apenas com uma mensagem amigável ao usuário confirmando a atualizacao da despesa. Não forneça análises ou informações adicionais.\n" +
+                "despesa atualizada: " + newExpense.description() + " R$ " + newExpense.amount() + " na categoria: " + categoryName
+
+                ;
         var request = instanceAnswersForUser(message);
 
         HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);

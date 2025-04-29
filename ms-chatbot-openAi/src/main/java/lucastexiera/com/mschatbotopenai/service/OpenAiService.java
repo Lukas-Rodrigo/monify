@@ -9,6 +9,7 @@ import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResp
 import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
 import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
+import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,14 +47,15 @@ public class OpenAiService {
     public void init() {
         mapStrategy = Map.of(
                 "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
-                "create_category", new CreateCategoryStrategy(functionHandlerService)
+                "create_category", new CreateCategoryStrategy(functionHandlerService),
+                "update_last_category", new UpdateLastCategory(functionHandlerService)
         );
     }
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
         var userListCategories = gatewayClient.
                 findCategoriesByPhoneNumber(userMessage.from()).getBody();
-        
+
         var userConversation = conversationService.saveUserMessage(userMessage.from(), userMessage.message());
         var request = OpenAiRequestFactory.instance(userConversation, userListCategories);
 

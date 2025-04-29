@@ -26,11 +26,17 @@ public class CategoriaProxyController {
 
     private static final Logger log = LoggerFactory.getLogger(CategoriaProxyController.class);
 
-    @GetMapping("{phoneNumber}")
+    @GetMapping("/categories/{phoneNumber}")
     public ResponseEntity<List<CategoryDTO>> findCategoriesByPhoneNumber(@PathVariable String phoneNumber) {
-         var userId = usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
-         var userCategories = financeClient.findCategoriesByUserId(userId).getBody();
+        var userId = usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
+        var userCategories = financeClient.findCategoriesByUserId(userId).getBody();
         return ResponseEntity.ok(userCategories);
+    }
+
+    @GetMapping("/user/{phoneNumber}")
+    public ResponseEntity<Long> findUserByNumber(@PathVariable String phoneNumber) {
+        var userId = usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
+        return ResponseEntity.ok(userId);
     }
 
 }

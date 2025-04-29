@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
-import lucastexiera.com.mschatbotopenai.dto.financemonify.NewExpense;
+import lucastexiera.com.mschatbotopenai.dto.financemonify.ExpenseDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
@@ -31,13 +31,16 @@ public class ChatFunctionHandlerService {
     @Autowired
     private AnswersForUsersService answersForUsersService;
 
+    @Autowired
+    private MonifyGatewayClient gatewayClient;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
         var expenseToBeSavedJson = OpenAiResponse.output().get(0).arguments();
 
-        var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, NewExpense.class);
+        var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, ExpenseDTO.class);
 
         if (!validateCategory(userListCategories, expenseToBeSaved)) {
             throw new RuntimeException("Categoria invalida");
@@ -49,6 +52,24 @@ public class ChatFunctionHandlerService {
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
 
         return chatbotMessage;
+    }
+
+    public ChatbotMessage updateLastCategory(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories ,String from) throws JsonProcessingException {
+        var userId = gatewayClient.findUserByNumber(from).getBody();
+
+        var expenseTolBeUpdateJson =  OpenAiResponse.output().get(0).arguments();
+
+        var expenseToBeUpdate = objectMapper.readValue(expenseTolBeUpdateJson, ExpenseDTO.class);
+
+        var categoryName = hasNameCategoryReturn(userListCategories, expenseToBeUpdate);
+
+        financeClient.updateLastExpense(userId ,expenseToBeUpdate);
+        log.info("Category a ser atualizada: {}", expenseTolBeUpdateJson);
+
+        var chatbotMessage = answersForUsersService.updateLastExpense(expenseToBeUpdate,categoryName);
+        conversationService.saveAssistantMessage(from, chatbotMessage.message());
+        return chatbotMessage;
+
     }
 
 
@@ -81,12 +102,13 @@ public class ChatFunctionHandlerService {
     }
 
 
-    public boolean validateCategory(List<CategoryDTO> userListCategories, NewExpense expenseToBeSaved) {
+
+    public boolean validateCategory(List<CategoryDTO> userListCategories, ExpenseDTO expenseToBeSaved) {
         return userListCategories.stream()
                 .anyMatch(c -> c.category_id().equals(expenseToBeSaved.category_id()));
     }
 
-    public CategoryDTO hasNameCategoryReturn(List<CategoryDTO> userCategories, NewExpense newExpense) {
+    public CategoryDTO hasNameCategoryReturn(List<CategoryDTO> userCategories, ExpenseDTO newExpense) {
         return userCategories.stream()
                 .filter(category -> category.category_id().equals(newExpense.category_id()))
                 .findFirst()

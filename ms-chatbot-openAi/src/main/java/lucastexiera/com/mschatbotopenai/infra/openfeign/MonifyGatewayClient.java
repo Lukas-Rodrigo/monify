@@ -11,6 +11,9 @@ import java.util.List;
 @FeignClient(name = "ms-monify-gateway", url = "localhost:8080/proxy")
 public interface MonifyGatewayClient {
 
-    @GetMapping("{phoneNumber}")
+    @GetMapping("/categories/{phoneNumber}")
     public ResponseEntity<List<CategoryDTO>> findCategoriesByPhoneNumber(@PathVariable String phoneNumber);
+
+    @GetMapping("/user/{phoneNumber}")
+    public ResponseEntity<Long> findUserByNumber(@PathVariable String phoneNumber);
 }

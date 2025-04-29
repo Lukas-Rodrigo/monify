@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lucastexiera.com.msfinancemonify.dto.ExpenseDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,16 +24,22 @@ public class Expense {
     private BigDecimal amount;
     @ManyToOne
     private Category category;
-    private LocalDateTime CreatedAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     private Long userId;
 
 
-    public Expense(Long id ,String description, BigDecimal amount, String category, LocalDateTime createdAt, Long userId) {
+    public Expense(Long id ,String description, BigDecimal amount, String category, Long userId) {
         this.description = description;
         this.amount = amount;
         this.category.setName(category);
-        CreatedAt = createdAt;
+
         this.userId = userId;
+    }
+
+    public void updateFromDTO(ExpenseDTO dto, Category category) {
+        this.description = dto.description();
+        this.amount = dto.amount();
+        this.category = category;
     }
 
 }

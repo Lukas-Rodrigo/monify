@@ -22,6 +22,7 @@ public class OpenAiRequestFactory {
         var newExpenseTool = instanceNewExpenseTool();
         var NewCategoryTool = instanceNewUserCategory();
         var deleteCategoryByIdTool = instanceDeleteCategoryById();
+        var updateLastExpense = updateExpenseTool();
 
 
         List<OpenAiMessageRequest.Message> allMessages = new ArrayList<>();
@@ -33,7 +34,7 @@ public class OpenAiRequestFactory {
         return new OpenAiMessageRequest(
                 "gpt-4.1",
                 allMessages,
-                List.of(newExpenseTool, NewCategoryTool,  deleteCategoryByIdTool),
+                List.of(newExpenseTool, NewCategoryTool,  deleteCategoryByIdTool, updateLastExpense),
                 new OpenAiMessageRequest.Text(new OpenAiMessageRequest.Format("text")),
                 "auto"
         );
@@ -63,6 +64,7 @@ public class OpenAiRequestFactory {
                                         "Sempre que o usuário mencionar uma nova despesa, você deve extrair a descrição, o valor (em R$) e a categoria correspondente. " +
                                         "Utilize a função de ferramenta 'enviar_despesa' para registrar essas informações. " +
                                         "As categorias disponíveis para este usuário são: " + formattedCategories + ". " +
+                                        "o usuario pode atualizar somente a ultima despesa. chame a funcao 'update_last_category'." +
                                         "Se a categoria mencionada pelo usuário não estiver na lista, peça gentilmente para ele escolher uma das disponíveis. " +
                                         "Se o usuário não mencionar o valor do gasto, peça gentilmente para ele." +
                                         "Se o usuario querer incluir uma categoria que ja esta na lista, fale gentilmente que ele ja possui essa categoria.")
@@ -95,6 +97,30 @@ public class OpenAiRequestFactory {
 
     }
 
+    private static OpenAiMessageRequest.Tool updateExpenseTool() {
+
+        Map<String, OpenAiMessageRequest.Property> propertiesNewExpense = Map.of(
+                "description", new OpenAiMessageRequest.Property("string", "Descrição da despesa"),
+                "amount", new OpenAiMessageRequest.Property("number", "Valor da despesa"),
+                "category_id", new OpenAiMessageRequest.Property("number", "Identificador da categoria selecionada")
+
+        );
+
+        return new OpenAiMessageRequest.Tool(
+                "function",
+                "update_last_category",
+                "Enviar os dados formatados da despesa para o backend atualizar de acordo com a categoria selecionada",
+                new OpenAiMessageRequest.Parameters(
+                        "object",
+                        List.of("description", "amount", "category_id"),
+                        propertiesNewExpense,
+                        false
+                ),
+                true
+        );
+
+    }
+
     private static  OpenAiMessageRequest.Tool instanceNewUserCategory() {
         Map<String, OpenAiMessageRequest.Property> propertiesNewCategory = Map.of(
                 "name", new OpenAiMessageRequest.Property("string", "Nome da nova categoria a ser cadastrada")
@@ -113,6 +139,8 @@ public class OpenAiRequestFactory {
                 true
         );
     }
+
+
 
     private static  OpenAiMessageRequest.Tool instanceDeleteCategoryById() {
         Map<String, OpenAiMessageRequest.Property> propertiesNewCategory = Map.of(

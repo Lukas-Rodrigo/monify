@@ -32,4 +32,9 @@ public class ExpenseController {
         expenseService.save(expense);
         return ResponseEntity.ok().build();
     }
+    @PutMapping("{userId}")
+    public ResponseEntity<Void> updateLastExpense(@PathVariable Long userId, @RequestBody ExpenseDTO newCategory) {
+        expenseService.updateLastExpense(userId, newCategory);
+        return ResponseEntity.ok().build();
+    }
 }
