@@ -23,8 +23,8 @@ public class ExpenseService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    public List<Expense> findAll() {
-        return expenseRepository.findAll();
+    public List<Expense> findAll(Long userId) {
+        return expenseRepository.findAllByUserId(userId);
     }
 
     public Expense save(ExpenseDTO expense) {
@@ -35,7 +35,6 @@ public class ExpenseService {
         return expenseRepository.save(newExpense);
     }
 
-
     private Expense CreateNewExpense(ExpenseDTO newExpense, Category category) {
         return new Expense(null,
                 newExpense.description(),
@@ -45,6 +44,4 @@ public class ExpenseService {
                 Long.valueOf(1)
         );
     }
-
-
 }

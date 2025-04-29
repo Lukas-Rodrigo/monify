@@ -21,9 +21,9 @@ public class ExpenseController {
     private Logger log = LoggerFactory.getLogger(ExpenseController.class);
 
 
-    @GetMapping
-    public ResponseEntity<List<Expense>> findAll() {
-        var listExpense =  expenseService.findAll();
+    @GetMapping("{userId}")
+    public ResponseEntity<List<Expense>> findAll(@PathVariable Long userId) {
+        var listExpense =  expenseService.findAll(userId);
         return ResponseEntity.ok(listExpense);
     }
 
@@ -32,6 +32,4 @@ public class ExpenseController {
         expenseService.save(expense);
         return ResponseEntity.ok().build();
     }
-
-
 }

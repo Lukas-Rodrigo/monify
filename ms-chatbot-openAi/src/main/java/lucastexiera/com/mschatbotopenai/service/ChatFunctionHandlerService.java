@@ -37,7 +37,6 @@ public class ChatFunctionHandlerService {
     public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
         var expenseToBeSavedJson = OpenAiResponse.output().get(0).arguments();
 
-
         var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, NewExpense.class);
 
         if (!validateCategory(userListCategories, expenseToBeSaved)) {
