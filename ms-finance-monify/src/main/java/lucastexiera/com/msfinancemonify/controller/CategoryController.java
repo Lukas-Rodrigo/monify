@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("v1/api/category")
+@RequestMapping("v1/finance/category")
 @Slf4j
 public class CategoryController {
 

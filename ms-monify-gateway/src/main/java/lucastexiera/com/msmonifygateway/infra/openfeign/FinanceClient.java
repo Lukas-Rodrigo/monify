@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "ms-finance-monify", path = "v1/api/category")
+@FeignClient(name = "ms-finance-monify", path = "v1/finance/category")
 public interface FinanceClient {
 
     @GetMapping("{userId}")

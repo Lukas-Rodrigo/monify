@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("v1/chatbot/messages")
+@RequestMapping("v1/chatbot/message")
 
 public class OpenAiController {
 
@@ -25,7 +25,7 @@ public class OpenAiController {
 
 
     @PostMapping("/whatsapp")
-    public ResponseEntity<ChatbotMessage> recivedMessageForMsWhatsapp(@RequestBody WhatsappUserMessageResponse payload) {
+    public ResponseEntity<ChatbotMessage> receivedMessageForMsWhatsapp(@RequestBody WhatsappUserMessageResponse payload) {
         var MessageToUse = openAiService.sendMessageOpenAi(payload);
         return ResponseEntity.ok(MessageToUse);
 

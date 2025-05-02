@@ -6,19 +6,19 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "ms-finance-monify", url =  "http://localhost:8083")
+@FeignClient(name = "ms-finance-monify", path =  "v1/finance")
 public interface FinanceClient {
 
-    @PostMapping("v1/api/expense")
+    @PostMapping("/expense")
     public ResponseEntity<Void> saveNewExpense(@RequestBody ExpenseDTO newExpense);
 
-    @PutMapping("v1/api/expense/{userId}")
+    @PutMapping("/expense/{userId}")
     public ResponseEntity<Void> updateLastExpense(@PathVariable Long userId, @RequestBody ExpenseDTO newCategory);
 
-    @PostMapping("v1/api/category")
+    @PostMapping("/category")
     public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO newCategory);
 
-    @DeleteMapping("v1/api/category")
+    @DeleteMapping("/category")
     public ResponseEntity<Void> deleteCategory(@RequestBody CategoryDTO newCategory);
 
 

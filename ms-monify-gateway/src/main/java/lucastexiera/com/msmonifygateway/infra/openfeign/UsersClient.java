@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-@FeignClient(name = "ms-users", url = "http://localhost:8084/v1/api/user")
+@FeignClient(name = "ms-users", path = "/v1/users")
 public interface UsersClient {
 
     @GetMapping("{phoneNumber}")

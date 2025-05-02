@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("v1/api/user")
+@RequestMapping("v1/users")
 @Slf4j
 public class UserController {
 
