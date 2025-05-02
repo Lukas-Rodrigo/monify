@@ -4,9 +4,11 @@ import jakarta.annotation.PostConstruct;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
+import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
-import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
+import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
+import lucastexiera.com.mschatbotopenai.infra.openfeign.UsersClient;
 import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastCategory;
@@ -19,6 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -32,14 +35,15 @@ public class OpenAiService {
     @Value("${openAi.api.baseURL}")
     private String OPENAI_URL;
 
-    @Autowired
-    private MonifyGatewayClient gatewayClient;
 
     @Autowired
     private ConversationService conversationService;
 
     @Autowired
     private ChatFunctionHandlerService functionHandlerService;
+
+    @Autowired
+    private UsersService usersService;
 
     private Map<String, ChatBotFunctionStrategy> mapStrategy;
 
@@ -53,8 +57,7 @@ public class OpenAiService {
     }
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
-        var userListCategories = gatewayClient.
-                findCategoriesByPhoneNumber(userMessage.from()).getBody();
+        var userListCategories = usersService.findCategoriesByPhoneNumber(userMessage.from());
 
         var userConversation = conversationService.saveUserMessage(userMessage.from(), userMessage.message());
         var request = OpenAiRequestFactory.instance(userConversation, userListCategories);
@@ -88,4 +91,5 @@ public class OpenAiService {
         return chatbotMessage;
 
     }
+
 }

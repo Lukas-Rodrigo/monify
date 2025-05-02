@@ -7,7 +7,6 @@ import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.ExpenseDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
-import lucastexiera.com.mschatbotopenai.infra.openfeign.MonifyGatewayClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,7 @@ public class ChatFunctionHandlerService {
     private AnswersForUsersService answersForUsersService;
 
     @Autowired
-    private MonifyGatewayClient gatewayClient;
+    private UsersService usersService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -55,7 +54,7 @@ public class ChatFunctionHandlerService {
     }
 
     public ChatbotMessage updateLastCategory(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories ,String from) throws JsonProcessingException {
-        var userId = gatewayClient.findUserByNumber(from).getBody();
+        var userId = usersService.UserByPhoneNumber(from);
 
         var expenseTolBeUpdateJson =  OpenAiResponse.output().get(0).arguments();
 
