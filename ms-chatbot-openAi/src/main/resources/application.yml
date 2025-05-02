@@ -5,19 +5,17 @@ spring:
     import: optional:application-secrets.yml
 
   datasource:
-    url: jdbc:h2:mem:openai
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5432/monify-db
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
+    hikari:
+      auto-commit: false
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 
 server:

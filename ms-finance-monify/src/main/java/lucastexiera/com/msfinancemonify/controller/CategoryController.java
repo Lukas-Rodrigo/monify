@@ -1,5 +1,6 @@
 package lucastexiera.com.msfinancemonify.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import lucastexiera.com.msfinancemonify.dto.CategoryDTO;
 import lucastexiera.com.msfinancemonify.model.Category;
 import lucastexiera.com.msfinancemonify.service.CategoryService;
@@ -8,19 +9,24 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("v1/api/category")
+@Slf4j
 public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
 
-
-    @GetMapping("{id}")
-    public ResponseEntity<List<Category>> findAll(@PathVariable Long id) {
-        var listCategory =  categoryService.findCategoriesByUserId(id);
-        return ResponseEntity.ok(listCategory);
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<CategoryDTO>> findCategoriesByUserId(@PathVariable Long userId) {
+        log.info("user id: {}", userId);
+        var userCategories = categoryService.findCategoriesByUserId(userId)
+                .stream()
+                .map(category -> new CategoryDTO(category.getId(), category.getName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(userCategories);
     }
 
     @PostMapping

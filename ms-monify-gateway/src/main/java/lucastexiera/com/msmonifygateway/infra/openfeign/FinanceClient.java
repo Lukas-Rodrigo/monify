@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "ms-finance-monify", url = "localhost:8083")
+@FeignClient(name = "ms-finance-monify", path = "v1/api/category")
 public interface FinanceClient {
 
-    @GetMapping("v1/api/webhook/users/{userId}")
+    @GetMapping("{userId}")
     public ResponseEntity<List<CategoryDTO>> findCategoriesByUserId(@PathVariable Long userId);
 }
