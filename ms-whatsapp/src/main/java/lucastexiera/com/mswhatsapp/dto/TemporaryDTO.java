@@ -1,4 +1,7 @@
 package lucastexiera.com.mswhatsapp.dto;
 
-public class temporaryDTO {
+public record TemporaryDTO (
+        String from,
+        String userMessage
+) {
 }

@@ -27,11 +27,11 @@ public class ExpenseService {
         return expenseRepository.findAllByUserId(userId);
     }
 
-    public Expense save(ExpenseDTO expense) {
+    public Expense saveNewExpense(ExpenseDTO expense, Long userId) {
         Category category = categoryRepository.findById(expense.category_id())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        var newExpense = CreateNewExpense(expense, category);
+        var newExpense = CreateNewExpense(expense, category, userId);
         return expenseRepository.save(newExpense);
     }
 
@@ -51,13 +51,13 @@ public class ExpenseService {
 
 
 
-    private Expense CreateNewExpense(ExpenseDTO newExpense, Category category) {
+    private Expense CreateNewExpense(ExpenseDTO newExpense, Category category, Long UserId) {
         return new Expense(null,
                 newExpense.description(),
                 newExpense.amount(),
                 category,
                 LocalDateTime.now(),
-                Long.valueOf(1)
+                UserId
         );
     }
 }

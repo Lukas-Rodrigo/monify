@@ -38,6 +38,7 @@ public class ChatFunctionHandlerService {
 
     public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
         var expenseToBeSavedJson = OpenAiResponse.output().get(0).arguments();
+        var userId = usersService.UserByPhoneNumber(from);
 
         var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, ExpenseDTO.class);
 
@@ -46,7 +47,7 @@ public class ChatFunctionHandlerService {
         }
         var categoryName = hasNameCategoryReturn(userListCategories, expenseToBeSaved);
 
-        financeClient.saveNewExpense(expenseToBeSaved);
+        financeClient.saveNewExpense(expenseToBeSaved, userId);
         var chatbotMessage = answersForUsersService.newExpenseMessage(expenseToBeSaved, categoryName);
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
 
@@ -73,11 +74,12 @@ public class ChatFunctionHandlerService {
 
 
     public ChatbotMessage saveNewCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
+        var userId = usersService.UserByPhoneNumber(from);
         var categoryTolBeSavedJson =  OpenAiResponse.output().get(0).arguments();
 
         var expenseToBeSaved = objectMapper.readValue(categoryTolBeSavedJson, CategoryDTO.class);
 
-        financeClient.saveNewCategory(expenseToBeSaved);
+        financeClient.saveNewCategory(expenseToBeSaved, userId);
         log.info("Category a ser salva: {}", categoryTolBeSavedJson);
 
         var chatbotMessage = answersForUsersService.newCategoryMessage(expenseToBeSaved);
@@ -88,6 +90,7 @@ public class ChatFunctionHandlerService {
 
     public ChatbotMessage deleteCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
         var categoryTolBeDeletedJson = OpenAiResponse.output().get(0).arguments();
+
 
         var expenseToBeDeleted = objectMapper.readValue(categoryTolBeDeletedJson, CategoryDTO.class);
 

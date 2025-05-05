@@ -2,6 +2,8 @@ package lucastexiera.com.mswhatsapp.service;
 
 
 import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotRequest;
+import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotResponse;
+import lucastexiera.com.mswhatsapp.dto.TemporaryDTO;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
 import lucastexiera.com.mswhatsapp.infra.openfeign.ChatbotClient;
@@ -35,6 +37,16 @@ public class WhatsappService {
     @Autowired
     private ChatbotClient chatbotClient;
 
+    public ChatBotResponse temporaryProcessIncomingMessage(TemporaryDTO temporaryDTO) {
+
+        var userMessage = temporaryDTO.userMessage();
+        var from = temporaryDTO.from();
+
+        var request = new ChatBotRequest(userMessage, from);
+        return chatbotClient.sendoMessageToChatBot(request);
+
+    }
+
 
     public void processIncomingMessage(WhatsappWebhookRequest payload) {
 
@@ -57,7 +69,7 @@ public class WhatsappService {
         var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
 
         log.info("chatBotMessage: {}", chatBotMessage);
-        sendMessage(from, chatBotMessage.message());
+//        sendMessage(from, chatBotMessage.message());
 
     }
 

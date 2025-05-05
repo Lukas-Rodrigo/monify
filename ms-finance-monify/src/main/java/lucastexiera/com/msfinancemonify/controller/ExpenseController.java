@@ -27,9 +27,9 @@ public class ExpenseController {
         return ResponseEntity.ok(listExpense);
     }
 
-    @PostMapping()
-    public ResponseEntity<Void> saveExpense(@RequestBody ExpenseDTO expense) {
-        expenseService.save(expense);
+    @PostMapping("{userId}")
+    public ResponseEntity<Void> saveExpense(@RequestBody ExpenseDTO expense , @PathVariable Long userId) {
+        expenseService.saveNewExpense(expense, userId);
         return ResponseEntity.ok().build();
     }
     @PutMapping("{userId}")

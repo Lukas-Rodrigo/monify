@@ -29,9 +29,9 @@ public class CategoryController {
         return ResponseEntity.ok(userCategories);
     }
 
-    @PostMapping
-    public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO category) {
-        categoryService.save(category);
+    @PostMapping("{userId}")
+    public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO category, @PathVariable Long userId) {
+        categoryService.saveNewCategory(category, userId);
         return ResponseEntity.ok().build();
     }
 

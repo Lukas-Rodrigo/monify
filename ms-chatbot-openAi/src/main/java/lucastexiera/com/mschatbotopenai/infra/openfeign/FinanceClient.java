@@ -11,8 +11,8 @@ import java.util.List;
 @FeignClient(name = "ms-finance-monify", path =  "v1/finance")
 public interface FinanceClient {
 
-    @PostMapping("/expense")
-    public ResponseEntity<Void> saveNewExpense(@RequestBody ExpenseDTO newExpense);
+    @PostMapping("/expense/{userId}")
+    public ResponseEntity<Void> saveNewExpense(@RequestBody ExpenseDTO newExpense, @PathVariable Long userId);
 
     @GetMapping("category/{userId}")
     public ResponseEntity<List<CategoryDTO>> findCategoriesByUserId(@PathVariable Long userId);
@@ -20,8 +20,8 @@ public interface FinanceClient {
     @PutMapping("/expense/{userId}")
     public ResponseEntity<Void> updateLastExpense(@PathVariable Long userId, @RequestBody ExpenseDTO newCategory);
 
-    @PostMapping("/category")
-    public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO newCategory);
+    @PostMapping("/category/{userId}")
+    public ResponseEntity<Void> saveNewCategory(@RequestBody CategoryDTO newCategory, @PathVariable Long userId);
 
     @DeleteMapping("/category")
     public ResponseEntity<Void> deleteCategory(@RequestBody CategoryDTO newCategory);

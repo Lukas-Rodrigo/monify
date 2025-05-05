@@ -19,16 +19,16 @@ public class CategoryService {
         return categoryRepository.findByUserId(userId);
     }
 
-    public Category save(CategoryDTO category) {
-        var newCategory = createNewCategory(category);
+    public Category saveNewCategory(CategoryDTO category, Long userId) {
+        var newCategory = createNewCategory(category, userId);
         return categoryRepository.save(newCategory);
     }
 
-    private Category createNewCategory(CategoryDTO category) {
+    private Category createNewCategory(CategoryDTO category, Long userId) {
         return new  Category(
                  null,
                 category.name(),
-                1L
+                userId
         );
     }
 

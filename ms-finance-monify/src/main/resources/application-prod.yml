@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://<SEU_HOST_PROD>:5432/monify-db
+    driver-class-name: org.postgresql.Driver
+    username: <SEU_USER_PROD>
+    password: <SENHA_PROD>
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://<SEU_EUREKA_PROD>:8761/eureka
+    fetch-registry: true
+    register-with-eureka: true
+
+
+server:
+  port: 8083
