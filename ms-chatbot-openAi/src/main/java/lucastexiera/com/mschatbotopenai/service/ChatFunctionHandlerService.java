@@ -48,7 +48,7 @@ public class ChatFunctionHandlerService {
         var categoryName = hasNameCategoryReturn(userListCategories, expenseToBeSaved);
 
         financeClient.saveNewExpense(expenseToBeSaved, userId);
-        var chatbotMessage = answersForUsersService.newExpenseMessage(expenseToBeSaved, categoryName);
+        var chatbotMessage = answersForUsersService.confirmNewExpense(expenseToBeSaved, categoryName);
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
 
         return chatbotMessage;
@@ -66,7 +66,7 @@ public class ChatFunctionHandlerService {
         financeClient.updateLastExpense(userId ,expenseToBeUpdate);
         log.info("Category a ser atualizada: {}", expenseTolBeUpdateJson);
 
-        var chatbotMessage = answersForUsersService.updateLastExpense(expenseToBeUpdate,categoryName);
+        var chatbotMessage = answersForUsersService.confirmUpdateExpense(expenseToBeUpdate,categoryName);
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
         return chatbotMessage;
 
@@ -82,7 +82,7 @@ public class ChatFunctionHandlerService {
         financeClient.saveNewCategory(expenseToBeSaved, userId);
         log.info("Category a ser salva: {}", categoryTolBeSavedJson);
 
-        var chatbotMessage = answersForUsersService.newCategoryMessage(expenseToBeSaved);
+        var chatbotMessage = answersForUsersService.confirmNewCategory(expenseToBeSaved);
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
         return chatbotMessage;
 
@@ -97,7 +97,7 @@ public class ChatFunctionHandlerService {
         financeClient.deleteCategory(expenseToBeDeleted);
         log.info("Category a ser excluida: {}", expenseToBeDeleted);
 
-        var chatbotMessage = answersForUsersService.deleteCategoryMessage(expenseToBeDeleted);
+        var chatbotMessage = answersForUsersService.confirmDeleteCategory(expenseToBeDeleted);
         conversationService.saveAssistantMessage(from, chatbotMessage.message());
         return chatbotMessage;
 
