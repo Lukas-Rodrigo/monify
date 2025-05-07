@@ -28,13 +28,13 @@ public class OpenAiRequestFactory {
             algum deles, solicite educadamente que complete.
             
             As categorias disponíveis para este usuário são:
+            exiba em ordem numerica sempre.
             %s
             
             Sempre verifique se a categoria informada está na lista. Caso o usuário mencione uma
             categoria inexistente, oriente-o a usar uma das disponíveis ou a cadastrar uma nova.
-            
-            Se o nome da categoria estiver incorreto (por erro de digitação ou idioma), corrija
-            automaticamente para a mais próxima da lista.
+             
+            Antes de chamar as funcoes corrija os erros de portugues/ingles -> categoria, descricao.
             
             O usuário pode atualizar apenas a última despesa cadastrada usando a função
             'update_last_category'.

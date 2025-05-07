@@ -14,10 +14,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -28,6 +30,8 @@ public class AnswersForUsersService {
   private final RestTemplate restTemplate;
   private final String openAiUrl;
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+  private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
 
   private enum Action {
     NEW_EXPENSE,
@@ -38,9 +42,9 @@ public class AnswersForUsersService {
 
   private static final Map<Action, String> TEMPLATES = new EnumMap<>(Action.class);
   static {
-    // Cada template já inicia com instrução para não adicionar comentários
+
     TEMPLATES.put(Action.NEW_EXPENSE,
-            "Você deve responder apenas com o bloco abaixo e com valor R$ formatado, sem explicações ou preâmbulos:\n" +
+            "Você deve responder apenas com o bloco abaixo, sem explicações ou preâmbulos:\n" +
                     "✅ Despesa Adicionada com sucesso! \n\n" +
                     "📋 **Descrição:**  \n   {description}\n\n" +
                     "🕒 **Data/Hora:**  \n   {datetime}\n\n" +
@@ -48,8 +52,8 @@ public class AnswersForUsersService {
                     "📂 **Categoria:**  \n   {category}");
 
     TEMPLATES.put(Action.UPDATE_EXPENSE,
-            "Você deve responder apenas com o bloco abaixo e com valor R$ formatado, sem explicações ou preâmbulos:\n" +
-                    "✅ Pronto, Atualizamos sua despesa \n \n" +
+            "Você deve responder apenas com o bloco abaixo, sem explicações ou preâmbulos: \n" +
+                    "✅ Pronto, atualizamos sua despesa. \n \n" +
                     "📋 **Descrição Atualizada:**  \n   {description}\n\n" +
                     "🕒 **Data/Hora:**  \n   {datetime}\n\n" +
                     "💰 **Valor Atualizado:**  \n   R$ {amount}\n\n" +
@@ -86,7 +90,7 @@ public class AnswersForUsersService {
   public ChatbotMessage confirmNewCategory(CategoryDTO category) {
     Map<String, Object> params = Map.of(
             "category", category.name(),
-            "datetime", now()
+            "datetime", formatDate()
     );
     return sendConfirmation(Action.NEW_CATEGORY, params);
   }
@@ -94,7 +98,7 @@ public class AnswersForUsersService {
   public ChatbotMessage confirmDeleteCategory(CategoryDTO category) {
     Map<String, Object> params = Map.of(
             "category", category.name(),
-            "datetime", now()
+            "datetime", formatDate()
     );
     return sendConfirmation(Action.DELETE_CATEGORY, params);
   }
@@ -113,14 +117,14 @@ public class AnswersForUsersService {
 
   private Map<String, Object> mapParams(ExpenseDTO expense, CategoryDTO category) {
     return Map.of(
-            "description", expense.description(),
-            "amount", expense.amount(),
-            "category", category.name(),
-            "datetime", now()
+            "description", formatString(expense.description()),
+            "amount", formatCurrency(expense.amount()),
+            "category", formatString(category.name()),
+            "datetime", formatDate()
     );
   }
 
-  private String now() {
+  private String formatDate() {
     return LocalDateTime.now().format(FORMATTER);
   }
 
@@ -155,5 +159,14 @@ public class AnswersForUsersService {
             entity,
             OpenAiMessageResponse.class
     ).getBody();
+  }
+
+  private String formatCurrency(Number value) {
+    return CURRENCY_FORMAT.format(value);
+  }
+
+  private String formatString(String text) {
+    if (text == null || text.isBlank()) return text;
+    return text.substring(0,1).toUpperCase() + text.substring(1);
   }
 }
