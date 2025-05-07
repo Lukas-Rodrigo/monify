@@ -14,125 +14,146 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
 public class AnswersForUsersService {
+  private static final Logger log = LoggerFactory.getLogger(AnswersForUsersService.class);
 
-    private static final Logger log = LoggerFactory.getLogger(AnswersForUsersService.class);
+  private final RestTemplate restTemplate;
+  private final String openAiUrl;
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
 
-    @Autowired
-    private ConversationService conversationService;
+  private enum Action {
+    NEW_EXPENSE,
+    UPDATE_EXPENSE,
+    NEW_CATEGORY,
+    DELETE_CATEGORY
+  }
 
-    @Autowired
-    private RestTemplate restTemplate;
+  private static final Map<Action, String> TEMPLATES = new EnumMap<>(Action.class);
+  static {
+    // Cada template já inicia com instrução para não adicionar comentários
+    TEMPLATES.put(Action.NEW_EXPENSE,
+            "Você deve responder apenas com o bloco abaixo e com valor R$ formatado, sem explicações ou preâmbulos:\n" +
+                    "✅ Despesa Adicionada com sucesso! \n\n" +
+                    "📋 **Descrição:**  \n   {description}\n\n" +
+                    "🕒 **Data/Hora:**  \n   {datetime}\n\n" +
+                    "💰 **Valor:**  \n   R$ {amount}\n\n" +
+                    "📂 **Categoria:**  \n   {category}");
 
-    @Value("${openAi.api.baseURL}")
-    private String OPENAI_URL;
+    TEMPLATES.put(Action.UPDATE_EXPENSE,
+            "Você deve responder apenas com o bloco abaixo e com valor R$ formatado, sem explicações ou preâmbulos:\n" +
+                    "✅ Pronto, Atualizamos sua despesa \n \n" +
+                    "📋 **Descrição Atualizada:**  \n   {description}\n\n" +
+                    "🕒 **Data/Hora:**  \n   {datetime}\n\n" +
+                    "💰 **Valor Atualizado:**  \n   R$ {amount}\n\n" +
+                    "📂 **Categoria:**  \n   {category}");
 
+    TEMPLATES.put(Action.NEW_CATEGORY,
+            "Você deve responder apenas com o bloco abaixo, sem explicações ou preâmbulos:\n" +
+                    "✅ Nova Categoria Adicionada! \n \n" +
+                    "📂 **Categoria Registrada:**  \n   {category}\n\n" +
+                    "🕒 **Data/Hora:**  \n   {datetime}");
 
-    public ChatbotMessage newExpenseMessage(ExpenseDTO newExpense, CategoryDTO categoryName) {
-        var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de registrar uma nova despesa. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando o registro da despesa.\n" +
-                "Responda apenas com uma mensagem amigável ao usuário confirmando o registro da despesa. Não forneça análises ou informações adicionais.\n" +
-                "despesa registrada: " + newExpense.description() + " R$ " + newExpense.amount() + " na categoria: " + categoryName
+    TEMPLATES.put(Action.DELETE_CATEGORY,
+            "Você deve responder apenas com o bloco abaixo, sem explicações ou preâmbulos:\n" +
+                    "Categoria excluida com sucesso\n \n" +
+                    "📂 **Categoria Excluída:**  \n   {category}\n\n" +
+                    "🕒 **Data/Hora:**  \n   {datetime}");
+  }
 
-        ;
-        var request = instanceAnswersForUser(message);
+  @Autowired
+  public AnswersForUsersService(RestTemplate restTemplate,
+                                @Value("${openAi.api.baseURL}") String openAiUrl) {
+    this.restTemplate = restTemplate;
+    this.openAiUrl = openAiUrl;
+  }
 
-        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
+  public ChatbotMessage confirmNewExpense(ExpenseDTO expense, CategoryDTO category) {
+    return sendConfirmation(Action.NEW_EXPENSE, mapParams(expense, category));
+  }
 
-        var openAiResponse = restTemplate.exchange(
-                OPENAI_URL,
-                HttpMethod.POST,
-                requestHttpEntity,
-                OpenAiMessageResponse.class
-        ).getBody();
+  public ChatbotMessage confirmUpdateExpense(ExpenseDTO expense, CategoryDTO category) {
+    return sendConfirmation(Action.UPDATE_EXPENSE, mapParams(expense, category));
+  }
 
-        log.info("OpenAiResponse: {}", openAiResponse);
+  public ChatbotMessage confirmNewCategory(CategoryDTO category) {
+    Map<String, Object> params = Map.of(
+            "category", category.name(),
+            "datetime", now()
+    );
+    return sendConfirmation(Action.NEW_CATEGORY, params);
+  }
 
-        return new ChatbotMessage(openAiResponse.output().get(0).content().get(0).text());
+  public ChatbotMessage confirmDeleteCategory(CategoryDTO category) {
+    Map<String, Object> params = Map.of(
+            "category", category.name(),
+            "datetime", now()
+    );
+    return sendConfirmation(Action.DELETE_CATEGORY, params);
+  }
+
+  private ChatbotMessage sendConfirmation(Action action, Map<String, Object> params) {
+    String template = TEMPLATES.get(action);
+    String filled = fillTemplate(template, params);
+
+    OpenAiMessageRequest request = buildSystemRequest(filled);
+    OpenAiMessageResponse response = callOpenAi(request);
+
+    String reply = response.output().get(0).content().get(0).text();
+    log.info("Generated confirmation [{}]: {}", action, reply);
+    return new ChatbotMessage(reply);
+  }
+
+  private Map<String, Object> mapParams(ExpenseDTO expense, CategoryDTO category) {
+    return Map.of(
+            "description", expense.description(),
+            "amount", expense.amount(),
+            "category", category.name(),
+            "datetime", now()
+    );
+  }
+
+  private String now() {
+    return LocalDateTime.now().format(FORMATTER);
+  }
+
+  private String fillTemplate(String template, Map<String, Object> params) {
+    String result = template;
+    for (var entry : params.entrySet()) {
+      result = result.replace("{" + entry.getKey() + "}", entry.getValue().toString());
     }
+    return result;
+  }
 
-    public ChatbotMessage updateLastExpense(ExpenseDTO newExpense, CategoryDTO categoryName) {
-        var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de Atualizar uma nova despesa. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando a atualizacao da despesa.\n" +
-                "Responda apenas com uma mensagem amigável ao usuário confirmando a atualizacao da despesa. Não forneça análises ou informações adicionais.\n" +
-                "despesa atualizada: " + newExpense.description() + " R$ " + newExpense.amount() + " na categoria: " + categoryName
 
-                ;
-        var request = instanceAnswersForUser(message);
+  private OpenAiMessageRequest buildSystemRequest(String systemMessage) {
+    var msg = new OpenAiMessageRequest.Message(
+            "assistant",
+            List.of(OpenAiMessageRequest.Content.fromRole(systemMessage, "assistant"))
+    );
+    return new OpenAiMessageRequest(
+            "gpt-4.1",
+            List.of(msg),
+            null,
+            new OpenAiMessageRequest.Text(new OpenAiMessageRequest.Format("text")),
+            "auto"
+    );
+  }
 
-        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
-
-        var openAiResponse = restTemplate.exchange(
-                OPENAI_URL,
-                HttpMethod.POST,
-                requestHttpEntity,
-                OpenAiMessageResponse.class
-        ).getBody();
-
-        log.info("OpenAiResponse: {}", openAiResponse);
-
-        return new ChatbotMessage(openAiResponse.output().get(0).content().get(0).text());
-    }
-
-    public ChatbotMessage newCategoryMessage(CategoryDTO categoryName) {
-        var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de registrar uma nova categoria. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando o registro da categoria.\n" +
-                "Responda apenas com uma mensagem amigável ao usuário confirmando o registro da despesa. Não forneça análises ou informações adicionais.\n" +
-                "categoria registrada: " + categoryName
-
-                ;
-        var request = instanceAnswersForUser(message);
-
-        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
-
-        var openAiResponse = restTemplate.exchange(
-                OPENAI_URL,
-                HttpMethod.POST,
-                requestHttpEntity,
-                OpenAiMessageResponse.class
-        ).getBody();
-
-        log.info("OpenAiResponse: {}", openAiResponse);
-
-        return new ChatbotMessage(openAiResponse.output().get(0).content().get(0).text());
-    }
-
-    public ChatbotMessage deleteCategoryMessage(CategoryDTO categoryName) {
-        var message = "Você é Monify, um assistente financeiro amigável. Sempre que for ativado, isso significa que o usuário acabou de excluir uma categoria. Sua única tarefa é responder com uma mensagem simpática e encorajadora confirmando o a exclusao da categoria.\n" +
-                "Responda apenas com uma mensagem amigável ao usuário confirmando a exclusao da categoria. Não forneça análises ou informações adicionais.\n" +
-                "categoria excluida: " + categoryName
-
-                ;
-        var request = instanceAnswersForUser(message);
-
-        HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
-
-        var openAiResponse = restTemplate.exchange(
-                OPENAI_URL,
-                HttpMethod.POST,
-                requestHttpEntity,
-                OpenAiMessageResponse.class
-        ).getBody();
-
-        log.info("OpenAiResponse: {}", openAiResponse);
-
-        return new ChatbotMessage(openAiResponse.output().get(0).content().get(0).text());
-    }
-
-    private OpenAiMessageRequest instanceAnswersForUser(String systemMessage) {
-        List<OpenAiMessageRequest.Message> allMessages = new ArrayList<>();
-        var message = new OpenAiMessageRequest.Message("assistant", List.of(OpenAiMessageRequest.Content.fromRole(systemMessage, "assistant")));
-        allMessages.add(message);
-
-        return new OpenAiMessageRequest(
-                "gpt-4.1",
-                allMessages,
-                null,
-                new OpenAiMessageRequest.Text(new OpenAiMessageRequest.Format("text")),
-                "auto"
-            );
-    }
-
+  private OpenAiMessageResponse callOpenAi(OpenAiMessageRequest request) {
+    HttpEntity<OpenAiMessageRequest> entity = new HttpEntity<>(request);
+    return restTemplate.exchange(
+            openAiUrl,
+            HttpMethod.POST,
+            entity,
+            OpenAiMessageResponse.class
+    ).getBody();
+  }
 }
