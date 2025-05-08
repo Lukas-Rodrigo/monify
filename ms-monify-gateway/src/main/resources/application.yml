@@ -1,12 +1,29 @@
 spring:
   application:
     name: ms-monify-gateway
+
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - 'http://localhost:5173'
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - '*'
+            allowCredentials: true
+
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
 server:
   port: 8080
 
