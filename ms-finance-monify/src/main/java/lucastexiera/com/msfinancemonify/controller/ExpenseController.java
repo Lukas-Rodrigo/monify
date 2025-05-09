@@ -1,5 +1,6 @@
 package lucastexiera.com.msfinancemonify.controller;
 
+import lucastexiera.com.msfinancemonify.dto.CategoryPercentageDTO;
 import lucastexiera.com.msfinancemonify.dto.ExpenseDTO;
 import lucastexiera.com.msfinancemonify.dto.ExpensesSummaryInPeriodDTO;
 import lucastexiera.com.msfinancemonify.model.Expense;
@@ -30,8 +31,8 @@ public class ExpenseController {
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping("expenses-period/{userId}")
-    public ResponseEntity<ExpensesSummaryInPeriodDTO> ExpesesInPeriod(
+    @GetMapping("summary-period/{userId}")
+    public ResponseEntity<ExpensesSummaryInPeriodDTO> summaryExpensesInPeriod(
             @PathVariable Long userId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -40,8 +41,36 @@ public class ExpenseController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate to
     ) {
-        var expensesInPeriod = expenseService.findExpensesInPeriod(userId, from, to);
+        var expensesInPeriod = expenseService.summaryExpensesInPeriod(userId, from, to);
         return ResponseEntity.ok(expensesInPeriod);
+    }
+
+  @GetMapping("expenses-period/{userId}")
+  public ResponseEntity<List<Expense>> ExpensesInPeriod(
+          @PathVariable Long userId,
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate from,
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate to
+  ) {
+    var expensesInPeriod = expenseService.findExpensesInPeriod(userId, from, to);
+    return ResponseEntity.ok(expensesInPeriod);
+  }
+
+    @GetMapping("categories-percentages/{userId}")
+    public ResponseEntity<List<CategoryPercentageDTO>>getCategoryPercentages(
+            @PathVariable Long userId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate to
+    ) {
+        var listCategories = expenseService.getCategoryPercentages(userId, from, to);
+        return ResponseEntity.ok(listCategories);
     }
 
     @PostMapping("{userId}")

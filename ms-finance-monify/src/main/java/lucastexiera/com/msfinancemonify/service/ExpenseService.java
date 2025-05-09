@@ -1,6 +1,7 @@
 
 package lucastexiera.com.msfinancemonify.service;
 
+import lucastexiera.com.msfinancemonify.dto.CategoryPercentageDTO;
 import lucastexiera.com.msfinancemonify.dto.CategorySummary;
 import lucastexiera.com.msfinancemonify.dto.ExpensesSummaryInPeriodDTO;
 import lucastexiera.com.msfinancemonify.dto.ExpenseDTO;
@@ -11,6 +12,7 @@ import lucastexiera.com.msfinancemonify.repositories.ExpenseRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -69,7 +71,7 @@ public class ExpenseService {
         expenseRepository.save(last);
     }
 
-    public ExpensesSummaryInPeriodDTO findExpensesInPeriod(Long userId,
+    public ExpensesSummaryInPeriodDTO summaryExpensesInPeriod(Long userId,
                                                            LocalDate from,
                                                            LocalDate to) {
         LocalDate today = LocalDate.now();
@@ -79,17 +81,73 @@ public class ExpenseService {
         LocalDateTime dtFrom = startDate.atStartOfDay();
         LocalDateTime dtTo   = endDate.atTime(LocalTime.MAX);
 
-        List<Expense> list = expenseRepository
+        List<Expense> expenses = expenseRepository
                 .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
 
-        BigDecimal total = calculateTotal(list);
-        CategorySummary top = frequencyCategory(list);
+        BigDecimal total = calculateTotal(expenses);
+        CategorySummary top = frequencyCategory(expenses);
 
         return new ExpensesSummaryInPeriodDTO(
                 top.categoryName(),
                 top.totalCategoryExpense(),
                 total
         );
+    }
+
+    public List<CategoryPercentageDTO> getCategoryPercentages(
+            Long userId, LocalDate from, LocalDate to
+    ) {
+        // defaults de 7 dias
+        LocalDate today = LocalDate.now();
+        LocalDate start = (from != null ? from : today.minusDays(7));
+        LocalDate end   = (to   != null ? to   : today);
+
+        LocalDateTime dtFrom = start.atStartOfDay();
+        LocalDateTime dtTo   = end.atTime(LocalTime.MAX);
+
+        // 1) busca lista de despesas
+        List<Expense> expenses = expenseRepository
+                .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
+
+        // 2) soma total
+        BigDecimal total = expenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (total.compareTo(BigDecimal.ZERO) == 0) {
+            // sem despesas: devolve lista vazia ou todas com 0%
+            return Collections.emptyList();
+        }
+
+        // 3) agrupa e soma por categoria
+        Map<String, BigDecimal> sumByCat = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        expense -> expense.getCategory().getName(),
+                        Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)
+                ));
+
+        // 4) converte em porcentagem
+        return sumByCat.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal pct = entry.getValue()
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(total, 2, RoundingMode.HALF_UP);
+                    return new CategoryPercentageDTO(entry.getKey(), pct);
+                })
+                .toList();
+    }
+
+    public List<Expense> findExpensesInPeriod(Long userId, LocalDate from, LocalDate to) {
+        LocalDate today = LocalDate.now();
+        LocalDate start = (from != null ? from : today.minusDays(7));
+        LocalDate end   = (to   != null ? to   : today);
+
+        LocalDateTime dtFrom = start.atStartOfDay();
+        LocalDateTime dtTo   = end.atTime(LocalTime.MAX);
+
+        // 1) busca lista de despesas
+        return expenseRepository
+                .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
     }
 
     // --- métodos privados de auxílio ---
