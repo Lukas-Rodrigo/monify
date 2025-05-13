@@ -37,10 +37,12 @@ public class ChatFunctionHandlerService {
 
 
     public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
-        var expenseToBeSavedJson = OpenAiResponse.output().get(0).arguments();
+        var expenseToBeSavedJson = OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
         var userId = usersService.UserByPhoneNumber(from);
 
         var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, ExpenseDTO.class);
+
+        log.info("Expense To Be Saved: {}", expenseToBeSaved);
 
         if (!validateCategory(userListCategories, expenseToBeSaved)) {
             throw new RuntimeException("Categoria invalida");
@@ -57,7 +59,7 @@ public class ChatFunctionHandlerService {
     public ChatbotMessage updateLastCategory(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories ,String from) throws JsonProcessingException {
         var userId = usersService.UserByPhoneNumber(from);
 
-        var expenseTolBeUpdateJson =  OpenAiResponse.output().get(0).arguments();
+        var expenseTolBeUpdateJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();;
 
         var expenseToBeUpdate = objectMapper.readValue(expenseTolBeUpdateJson, ExpenseDTO.class);
 
@@ -75,7 +77,7 @@ public class ChatFunctionHandlerService {
 
     public ChatbotMessage saveNewCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
         var userId = usersService.UserByPhoneNumber(from);
-        var categoryTolBeSavedJson =  OpenAiResponse.output().get(0).arguments();
+        var categoryTolBeSavedJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
 
         var expenseToBeSaved = objectMapper.readValue(categoryTolBeSavedJson, CategoryDTO.class);
 
@@ -89,7 +91,7 @@ public class ChatFunctionHandlerService {
     }
 
     public ChatbotMessage deleteCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
-        var categoryTolBeDeletedJson = OpenAiResponse.output().get(0).arguments();
+        var categoryTolBeDeletedJson = OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();;
 
 
         var expenseToBeDeleted = objectMapper.readValue(categoryTolBeDeletedJson, CategoryDTO.class);

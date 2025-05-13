@@ -19,7 +19,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping("/{userId}")
+    @GetMapping("{userId}")
     public ResponseEntity<List<CategoryDTO>> findCategoriesByUserId(@PathVariable Long userId) {
         log.info("user id: {}", userId);
         var userCategories = categoryService.findCategoriesByUserId(userId)

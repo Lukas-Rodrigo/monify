@@ -5,34 +5,18 @@ import java.util.Map;
 
 public record OpenAiMessageRequest(
         String model,
-        List<Message> input,
+        List<Message> messages,
         List<Tool> tools,
-        Text text,
         String tool_choice
 ) {
-    public record Message(String role, List<Content> content) {}
+    public record Message(String role, String content) {}
 
-    public record Content(String type, String text) {
+    public record Tool(String type, Function function) {}
 
-        public static Content fromRole(String text, String role) {
-            String type = "assistant".equals(role) ? "output_text" : "input_text";
-            return new Content(type, text);
-        }
-
-    }
-
-
-
-    public record Text(Format format) {}
-
-    public record Format(String type) {}
-
-    public record Tool(
-            String type,
+    public record Function(
             String name,
             String description,
-            Parameters parameters,
-            boolean strict
+            Parameters parameters
     ) {}
 
     public record Parameters(
@@ -42,7 +26,5 @@ public record OpenAiMessageRequest(
             boolean additionalProperties
     ) {}
 
-
     public record Property(String type, String description) {}
-
 }

@@ -110,7 +110,7 @@ public class AnswersForUsersService {
     OpenAiMessageRequest request = buildSystemRequest(filled);
     OpenAiMessageResponse response = callOpenAi(request);
 
-    String reply = response.output().get(0).content().get(0).text();
+    String reply = response.choices().get(0).message().content();
     log.info("Generated confirmation [{}]: {}", action, reply);
     return new ChatbotMessage(reply);
   }
@@ -140,14 +140,13 @@ public class AnswersForUsersService {
   private OpenAiMessageRequest buildSystemRequest(String systemMessage) {
     var msg = new OpenAiMessageRequest.Message(
             "assistant",
-            List.of(OpenAiMessageRequest.Content.fromRole(systemMessage, "assistant"))
+            systemMessage
     );
     return new OpenAiMessageRequest(
             "gpt-4.1",
             List.of(msg),
             null,
-            new OpenAiMessageRequest.Text(new OpenAiMessageRequest.Format("text")),
-            "auto"
+            null
     );
   }
 

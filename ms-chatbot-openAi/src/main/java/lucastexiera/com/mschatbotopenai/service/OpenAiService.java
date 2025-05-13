@@ -4,11 +4,8 @@ import jakarta.annotation.PostConstruct;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
-import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
-import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
-import lucastexiera.com.mschatbotopenai.infra.openfeign.UsersClient;
 import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastCategory;
@@ -21,7 +18,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -58,8 +54,10 @@ public class OpenAiService {
 
     public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
         var userListCategories = usersService.findCategoriesByPhoneNumber(userMessage.from());
+        log.info("userListCategories={}", userListCategories);
 
-        var userConversation = conversationService.saveUserMessage(userMessage.from(), userMessage.message());
+        conversationService.saveUserMessage(userMessage.from(), userMessage.message());
+        var userConversation = conversationService.getRecentMessagesByUserPhoneNumber(userMessage.from(), 2);
         var request = OpenAiRequestFactory.instance(userConversation, userListCategories);
 
         HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
@@ -71,10 +69,10 @@ public class OpenAiService {
                 OpenAiMessageResponse.class
         ).getBody();
 
-        var typeOpenAIMessage = openAiResponse.output().get(0).type();
-
-        if (typeOpenAIMessage.equals("function_call")) {
-            var typeFunctionCall = openAiResponse.output().get(0).name();
+        var typeOpenAIMessage = openAiResponse.choices().get(0).message().content();
+        log.info("OpenAI Message Type: {}", typeOpenAIMessage);
+        if (typeOpenAIMessage == null) {
+            var typeFunctionCall = openAiResponse.choices().get(0).message().tool_calls().get(0).function().name();
             log.info("function type, {}", typeFunctionCall);
             try {
                 return mapStrategy.get(typeFunctionCall).handle(openAiResponse, userListCategories, userMessage);
@@ -83,8 +81,7 @@ public class OpenAiService {
                 e.printStackTrace();
             }
         }
-        var contentMessageChatBot = openAiResponse.output().get(0).content().get(0).text();
-        var chatbotMessage = new ChatbotMessage(contentMessageChatBot);
+        var chatbotMessage = new ChatbotMessage(typeOpenAIMessage);
 
         conversationService.saveAssistantMessage(userMessage.from(), chatbotMessage.message());
         log.info("Normal Conversation={}", chatbotMessage.message());

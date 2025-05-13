@@ -3,20 +3,29 @@ package lucastexiera.com.mschatbotopenai.dto.chatbot;
 import java.util.List;
 
 public record OpenAiMessageResponse(
-        String id,
-        String status,
-        List<Output> output
+        long created,
+        String model,
+        List<Choice> choices
 ) {
-    public record Output(
-            String type,
-            String role,
-            List<Content> content,
-            String name,
-            String arguments
+    public record Choice(
+            int index,
+            Message message
     ) {}
 
-    public record Content(
+    public record Message(
+            String role,
+            String content,
+            List<ToolCall> tool_calls
+    ) {}
+
+    public record ToolCall(
+            String id,
             String type,
-            String text
+            Function function
+    ) {}
+
+    public record Function(
+            String name,
+            String arguments
     ) {}
 }
