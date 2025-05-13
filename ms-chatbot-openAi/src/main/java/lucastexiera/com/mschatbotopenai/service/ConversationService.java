@@ -4,12 +4,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lucastexiera.com.mschatbotopenai.model.ChatMessage;
 import lucastexiera.com.mschatbotopenai.model.Conversation;
+import lucastexiera.com.mschatbotopenai.repositories.ChatMessageRepository;
 import lucastexiera.com.mschatbotopenai.repositories.ConversationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ConversationService {
@@ -17,7 +19,8 @@ public class ConversationService {
     @Autowired
     private ConversationRepository conversationRepository;
 
-    // refatorar.
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
 
     @Transactional
@@ -56,6 +59,13 @@ public class ConversationService {
         return conversationRepository.findByUserPhoneNumber(userPhoneNumber).orElseThrow(
                 () -> new EntityNotFoundException("User phone number " + userPhoneNumber + " not found")
         );
+    }
+
+    public List<ChatMessage> getRecentMessagesByUserPhoneNumber(String userPhoneNumber, int days) {
+        LocalDateTime daysAgo = LocalDateTime.now().minusDays(days);
+        return chatMessageRepository.findRecentMessagesByPhoneNumber(userPhoneNumber, daysAgo);
+
+
     }
 
     private Conversation createNewConversation(String userPhoneNumber) {
