@@ -72,8 +72,7 @@ public class ExpenseService {
     }
 
     public ExpensesSummaryInPeriodDTO summaryExpensesInPeriod(Long userId,
-                                                           LocalDate from,
-                                                           LocalDate to) {
+                                                           LocalDate from, LocalDate to) {
         LocalDate today = LocalDate.now();
         LocalDate startDate = (from != null ? from : today.minusDays(7));
         LocalDate endDate   = (to   != null ? to   : today);

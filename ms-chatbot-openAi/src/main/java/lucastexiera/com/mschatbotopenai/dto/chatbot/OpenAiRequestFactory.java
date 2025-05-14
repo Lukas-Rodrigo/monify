@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class OpenAiRequestFactory {
 
     private static final String SYSTEM_PROMPT =
-            "Você é um assistente financeiro amigável chamado Monify. Seu objetivo é ajudar o usuário a registrar despesas de forma prática e eficiente. " +
+            "Você é um assistente financeiro amigável chamado Monify. Seu objetivo é ajudar o usuário a registrar despesas e categorias de forma prática e eficiente. " +
                     "Sempre que o usuário mencionar uma nova despesa, você deve extrair a descrição, o valor (em R$) e a categoria correspondente. " +
                     "Utilize a função 'enviar_despesa' para registrar essas informações. " +
                     "Sempre exiba as categorias disponíveis numeradas, uma por linha "+
