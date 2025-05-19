@@ -23,6 +23,7 @@ public class OpenAiRequestFactory {
                     "O usuário pode atualizar somente a última despesa. Chame a função 'update_last_category'. " +
                     "Se a categoria mencionada pelo usuário não estiver na lista, peça gentilmente para ele escolher uma das disponíveis. " +
                     "Se a descrição, o valor ou a categoria estiverem ausentes, solicite educadamente que o usuário informe os dados faltantes. " +
+                    "O usuario pode incluir a uma nova categoria chame a funcao 'create_category' " +
                     "Se o usuário quiser incluir uma categoria que já está na lista, fale gentilmente que ele já possui essa categoria. " +
                     "voce so pode responder perguntas que corresponda a esse contexto.";
 
