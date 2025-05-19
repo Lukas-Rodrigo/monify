@@ -33,21 +33,7 @@ public class ExpenseService {
         this.categoryRepository = categoryRepository;
     }
 
-
-    public List<Expense> findAll(Long userId) {
-        return expenseRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
-
-    public List<Expense> lastSevenDays(Long userId) {
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime sevenDaysAgoStart = now.minusDays(7).with(LocalTime.MIN);
-        LocalDateTime todayEnd = now.with(LocalTime.MAX);
-        return expenseRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, sevenDaysAgoStart, todayEnd);
-    }
-
-
-    public Expense saveNewExpense(ExpenseDTO dto, Long userId) {
+    public void saveNewExpense(ExpenseDTO dto, Long userId) {
         Category category = categoryRepository.findById(dto.category_id())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
         Expense exp = new Expense();
@@ -56,35 +42,26 @@ public class ExpenseService {
         exp.setCategory(category);
         exp.setCreatedAt(LocalDateTime.now());
         exp.setUserId(userId);
-        return expenseRepository.save(exp);
+        expenseRepository.save(exp);
     }
 
 
     public void updateLastExpense(Long userId, ExpenseDTO dto) {
-        Expense last = expenseRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+        Expense lastExpense = expenseRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new RuntimeException("Nenhuma despesa encontrada para o usuário"));
         Category category = categoryRepository.findById(dto.category_id())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
-        last.setDescription(dto.description());
-        last.setAmount(dto.amount());
-        last.setCategory(category);
-        expenseRepository.save(last);
+        lastExpense.setDescription(dto.description());
+        lastExpense.setAmount(dto.amount());
+        lastExpense.setCategory(category);
+        expenseRepository.save(lastExpense);
     }
 
-    public ExpensesSummaryInPeriodDTO summaryExpensesInPeriod(Long userId,
-                                                           LocalDate from, LocalDate to) {
-        LocalDate today = LocalDate.now();
-        LocalDate startDate = (from != null ? from : today.minusDays(7));
-        LocalDate endDate   = (to   != null ? to   : today);
+    public ExpensesSummaryInPeriodDTO summaryExpensesInPeriod(Long userId, LocalDate from, LocalDate to) {
+        var expensesInPeriod = findExpensesInPeriod(userId, from, to);
 
-        LocalDateTime dtFrom = startDate.atStartOfDay();
-        LocalDateTime dtTo   = endDate.atTime(LocalTime.MAX);
-
-        List<Expense> expenses = expenseRepository
-                .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
-
-        BigDecimal total = calculateTotal(expenses);
-        CategorySummary top = frequencyCategory(expenses);
+        BigDecimal total = calculateTotal(expensesInPeriod);
+        CategorySummary top = frequencyCategory(expensesInPeriod);
 
         return new ExpensesSummaryInPeriodDTO(
                 top.categoryName(),
@@ -96,42 +73,26 @@ public class ExpenseService {
     public List<CategoryPercentageDTO> getCategoryPercentages(
             Long userId, LocalDate from, LocalDate to
     ) {
-        // defaults de 7 dias
-        LocalDate today = LocalDate.now();
-        LocalDate start = (from != null ? from : today.minusDays(7));
-        LocalDate end   = (to   != null ? to   : today);
+        var expensesInPeriod = findExpensesInPeriod(userId, from, to);
 
-        LocalDateTime dtFrom = start.atStartOfDay();
-        LocalDateTime dtTo   = end.atTime(LocalTime.MAX);
-
-        // 1) busca lista de despesas
-        List<Expense> expenses = expenseRepository
-                .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
-
-        // 2) soma total
-        BigDecimal total = expenses.stream()
-                .map(Expense::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = calculateTotal(expensesInPeriod);
 
         if (total.compareTo(BigDecimal.ZERO) == 0) {
-            // sem despesas: devolve lista vazia ou todas com 0%
             return Collections.emptyList();
         }
 
-        // 3) agrupa e soma por categoria
-        Map<String, BigDecimal> sumByCat = expenses.stream()
+        var sumByCat = expensesInPeriod.stream()
                 .collect(Collectors.groupingBy(
                         expense -> expense.getCategory().getName(),
                         Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)
                 ));
-
-        // 4) converte em porcentagem
+        
         return sumByCat.entrySet().stream()
                 .map(entry -> {
-                    BigDecimal pct = entry.getValue()
+                    BigDecimal categoryPercentage = entry.getValue()
                             .multiply(BigDecimal.valueOf(100))
                             .divide(total, 2, RoundingMode.HALF_UP);
-                    return new CategoryPercentageDTO(entry.getKey(), pct);
+                    return new CategoryPercentageDTO(entry.getKey(), categoryPercentage);
                 })
                 .toList();
     }
@@ -144,12 +105,10 @@ public class ExpenseService {
         LocalDateTime dtFrom = start.atStartOfDay();
         LocalDateTime dtTo   = end.atTime(LocalTime.MAX);
 
-        // 1) busca lista de despesas
         return expenseRepository
                 .findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, dtFrom, dtTo);
     }
 
-    // --- métodos privados de auxílio ---
 
     private BigDecimal calculateTotal(List<Expense> expenses) {
         return expenses.stream()
