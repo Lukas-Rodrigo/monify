@@ -24,7 +24,8 @@ public class OpenAiController {
 
     @PostMapping("/whatsapp")
     public ResponseEntity<ChatbotMessage> receivedMessageForMsWhatsapp(
-            @RequestBody WhatsappUserMessageResponse payload) {
+            @RequestBody WhatsappUserMessageResponse payload
+    ) {
         var MessageToUse = openAiService.sendMessageOpenAi(payload);
         return ResponseEntity.ok(MessageToUse);
 

@@ -46,9 +46,12 @@ public class OpenAiService {
     @PostConstruct
     public void init() {
         mapStrategy = Map.of(
-                "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
-                "create_category", new CreateCategoryStrategy(functionHandlerService),
-                "update_last_expense", new UpdateLastExpense(functionHandlerService)
+            "enviar_despesa",
+            new SaveNewExpenseStrategy(functionHandlerService),
+            "create_category",
+            new CreateCategoryStrategy(functionHandlerService),
+            "update_last_expense",
+            new UpdateLastExpense(functionHandlerService)
         );
     }
 
@@ -62,20 +65,39 @@ public class OpenAiService {
 
         HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
 
-        var openAiResponse = restTemplate.exchange(
+        var openAiResponse = restTemplate
+            .exchange(
                 OPENAI_URL,
                 HttpMethod.POST,
                 requestHttpEntity,
                 OpenAiMessageResponse.class
-        ).getBody();
+            )
+            .getBody();
 
-        var typeOpenAIMessage = openAiResponse.choices().get(0).message().content();
+        var typeOpenAIMessage = openAiResponse
+            .choices()
+            .get(0)
+            .message()
+            .content();
         log.info("OpenAI Message Type: {}", typeOpenAIMessage);
         if (typeOpenAIMessage == null) {
-            var typeFunctionCall = openAiResponse.choices().get(0).message().tool_calls().get(0).function().name();
+            var typeFunctionCall = openAiResponse
+                .choices()
+                .get(0)
+                .message()
+                .tool_calls()
+                .get(0)
+                .function()
+                .name();
             log.info("function type, {}", typeFunctionCall);
             try {
-                return mapStrategy.get(typeFunctionCall).handle(openAiResponse, userListCategories, userMessage);
+                return mapStrategy
+                    .get(typeFunctionCall)
+                    .handle(
+                        openAiResponse,
+                        userListCategories,
+                        userMessage
+                    );
 
             } catch (Exception e) {
                 e.printStackTrace();

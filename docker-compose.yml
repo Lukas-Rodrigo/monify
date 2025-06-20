@@ -1,5 +1,6 @@
 services:
   eureka-server:
+    image: lucas607/monify-eureka-server:latest
     build: ./monify-eureka-server
     ports:
       - "8761:8761"
@@ -7,6 +8,7 @@ services:
       - app-network
 
   ms-users:
+    image: lucas607/monify-ms-users:latest
     build: ./ms-users
     ports:
       - "8084:8084"
@@ -21,6 +23,7 @@ services:
       - app-network
 
   ms-chatbot-openai:
+    image: lucas607/monify-ms-chatbot-openai:latest
     build: ./ms-chatbot-openAi
     ports:
       - "8082:8082"
@@ -35,6 +38,7 @@ services:
       - app-network
 
   ms-finance-monify:
+    image: lucas607/monify-ms-finance-monify:latest
     build: ./ms-finance-monify
     ports:
       - "8083:8083"
@@ -49,6 +53,7 @@ services:
       - app-network
 
   ms-monify-gateway:
+    image: lucas607/monify-ms-monify-gateway:latest
     build: ./ms-monify-gateway
     ports:
       - "8080:8080"
@@ -58,26 +63,12 @@ services:
       - app-network
 
   ms-whatsapp:
+    image: lucas607/monify-ms-whatsapp:latest
     build: ./ms-whatsapp
     ports:
       - "8081:8081"
     depends_on:
-      - wppconnect
       - eureka-server
-    networks:
-      - app-network
-
-  wppconnect:
-    image: wppconnect/server-cli:latest
-    container_name: wppconnect
-    ports:
-      - "21465:21465"
-    environment:
-      - PORT=21465
-      - DEBUG=true
-      - SECRET_KEY=123123
-    volumes:
-      - wpp-data:/usr/app/tokens
     networks:
       - app-network
 
