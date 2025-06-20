@@ -1,0 +1,13 @@
+spring:
+  config:
+    import: optional:classpath:application-secrets.yml
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+server:
+  port: 8081
+
