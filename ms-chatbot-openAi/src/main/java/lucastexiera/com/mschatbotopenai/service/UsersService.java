@@ -19,11 +19,11 @@ public class UsersService {
 
 
     public List<CategoryDTO> findCategoriesByPhoneNumber(String phoneNumber) {
-        var userByPhoneNumber = usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
-        return financeClient.findCategoriesByUserId(userByPhoneNumber).getBody();
+        var userID = usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
+        return financeClient.findCategoriesByUserId(userID).getBody();
     }
 
-    public Long UserByPhoneNumber(String phoneNumber) {
+    public Long findUserIDByPhoneNumber(String phoneNumber) {
         return usersClient.findUserIdByPhoneNumber(phoneNumber).getBody();
     }
 }

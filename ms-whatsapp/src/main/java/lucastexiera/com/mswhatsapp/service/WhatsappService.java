@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -43,7 +42,7 @@ public class WhatsappService {
         var from = temporaryDTO.from();
 
         var request = new ChatBotRequest(userMessage, from);
-        return chatbotClient.sendoMessageToChatBot(request);
+        return chatbotClient.sendMessageToChatBot(request);
 
     }
 
@@ -66,7 +65,7 @@ public class WhatsappService {
         log.info("userMessage: {}", userMessage);
 
         var request = new ChatBotRequest(userMessage, from);
-        var chatBotMessage = chatbotClient.sendoMessageToChatBot(request);
+        var chatBotMessage = chatbotClient.sendMessageToChatBot(request);
 
         log.info("chatBotMessage: {}", chatBotMessage);
 //        sendMessage(from, chatBotMessage.message());

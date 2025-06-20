@@ -8,7 +8,7 @@ import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
 import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
 import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
-import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastCategory;
+import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastExpense;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class OpenAiService {
     private ConversationService conversationService;
 
     @Autowired
-    private ChatFunctionHandlerService functionHandlerService;
+    private ToolHandleService functionHandlerService;
 
     @Autowired
     private UsersService usersService;
@@ -48,7 +48,7 @@ public class OpenAiService {
         mapStrategy = Map.of(
                 "enviar_despesa", new SaveNewExpenseStrategy(functionHandlerService),
                 "create_category", new CreateCategoryStrategy(functionHandlerService),
-                "update_last_category", new UpdateLastCategory(functionHandlerService)
+                "update_last_expense", new UpdateLastExpense(functionHandlerService)
         );
     }
 

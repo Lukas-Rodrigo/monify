@@ -24,7 +24,6 @@ public class ExpenseController {
 
     private Logger log = LoggerFactory.getLogger(ExpenseController.class);
 
-
     @GetMapping("summary-period/{userId}")
     public ResponseEntity<ExpensesSummaryInPeriodDTO> summaryExpensesInPeriod(
             @PathVariable Long userId,

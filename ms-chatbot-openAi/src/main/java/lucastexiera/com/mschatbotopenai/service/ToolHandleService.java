@@ -15,10 +15,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ChatFunctionHandlerService {
+public class ToolHandleService {
 
 
-    private static final Logger log = LoggerFactory.getLogger(ChatFunctionHandlerService.class);
+    private static final Logger log = LoggerFactory.getLogger(ToolHandleService.class);
 
     @Autowired
     private FinanceClient financeClient;
@@ -38,7 +38,7 @@ public class ChatFunctionHandlerService {
 
     public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
         var expenseToBeSavedJson = OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
-        var userId = usersService.UserByPhoneNumber(from);
+        var userId = usersService.findUserIDByPhoneNumber(from);
 
         var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, ExpenseDTO.class);
 
@@ -57,7 +57,7 @@ public class ChatFunctionHandlerService {
     }
 
     public ChatbotMessage updateLastCategory(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories ,String from) throws JsonProcessingException {
-        var userId = usersService.UserByPhoneNumber(from);
+        var userId = usersService.findUserIDByPhoneNumber(from);
 
         var expenseTolBeUpdateJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();;
 
@@ -76,7 +76,7 @@ public class ChatFunctionHandlerService {
 
 
     public ChatbotMessage saveNewCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
-        var userId = usersService.UserByPhoneNumber(from);
+        var userId = usersService.findUserIDByPhoneNumber(from);
         var categoryTolBeSavedJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
 
         var expenseToBeSaved = objectMapper.readValue(categoryTolBeSavedJson, CategoryDTO.class);
