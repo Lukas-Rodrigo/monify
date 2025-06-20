@@ -15,10 +15,10 @@ public class AbstractIntegrationTest {
 
   public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:13")
-            .withDatabaseName("chatbottestdb")
-            .withUsername("test123")
-            .withPassword("test123");
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16")
+            .withDatabaseName("monify")
+            .withUsername("postgres")
+            .withPassword("admin");
 
     private static void startContainers() {
       Startables.deepStart(Stream.of(postgreSQLContainer)).join();
