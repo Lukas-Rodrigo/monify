@@ -3,17 +3,16 @@ package lucastexiera.com.mswhatsapp.service;
 
 import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotRequest;
 import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotResponse;
-import lucastexiera.com.mswhatsapp.dto.TemporaryDTO;
 import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
-import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
 import lucastexiera.com.mswhatsapp.infra.openfeign.ChatbotClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Objects;
 
 @Service
 public class WhatsappService {
@@ -21,66 +20,56 @@ public class WhatsappService {
     private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
 
 
-    @Value("${whatsapp.api.baseURL}")
-    private String WHATSAPP_API_URL;
-
-    @Value("${whatsapp.api.numberID}")
-    private String PHONE_NUMBER_ID;
-
-    @Value("${whatsapp.api.token}")
-    private String WHATSAPP_API_KEY;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
     @Autowired
     private ChatbotClient chatbotClient;
 
-    public ChatBotResponse temporaryProcessIncomingMessage(TemporaryDTO temporaryDTO) {
+    public ChatBotResponse processIncomingMessage(
+        WhatsAppMessageRequest messageRequest
+    ) {
+        if (validateUserMessage(messageRequest)) {
+            throw new RuntimeException("Tipo de mensagem invalida");
+        }
 
-        var userMessage = temporaryDTO.userMessage();
-        var from = temporaryDTO.from();
+        var userMessage = messageRequest.body();
+        var from = extractPhoneNumber(messageRequest.from());
 
-        var request = new ChatBotRequest(userMessage, from);
-        return chatbotClient.sendMessageToChatBot(request);
+        log.info(
+            "userMessage: {}",
+            userMessage
+        );
 
-    }
+        log.info(
+            "from: {}",
+            from
+        );
 
+        var chatbotMessage =
+            chatbotClient.sendMessageToChatBot(new ChatBotRequest(userMessage
+                , from));
 
-    public void processIncomingMessage(WhatsappWebhookRequest payload) {
+        log.info("chatbotRequest: {}", chatbotMessage);
 
-        log.info("dados recebidos: {}", payload);
-
-        var entryList = payload.entry();
-
-        var changeList = entryList.get(0).changes();
-
-        var messageValues = changeList.get(0).value();
-
-        var message = messageValues.messages().get(0);
-        var from = message.from();
-        String userMessage = message.text().body();
-
-        log.info("from: {}", from);
-        log.info("userMessage: {}", userMessage);
-
-        var request = new ChatBotRequest(userMessage, from);
-        var chatBotMessage = chatbotClient.sendMessageToChatBot(request);
-
-        log.info("chatBotMessage: {}", chatBotMessage);
-//        sendMessage(from, chatBotMessage.message());
+        return chatbotMessage;
 
     }
 
-    public void sendMessage(String to, String message) {
-        String url = WHATSAPP_API_URL + PHONE_NUMBER_ID + "/messages";
-        log.info("Mensagem para o número: " + to);
-        log.info("Mensagem: " + message);
-        var messageRequest = WhatsAppMessageRequest.of(to, message);
-        HttpEntity<WhatsAppMessageRequest> request = new HttpEntity<>(messageRequest);
-        restTemplate.postForEntity(url, request, String.class);
+
+    private boolean validateUserMessage(WhatsAppMessageRequest messageRequest) {
+        return !Objects.equals(
+            messageRequest.event(),
+            "onmessage"
+        ) || messageRequest.isGroupMsg() || messageRequest
+            .type()
+            .equals(
+                "ptt");
     }
 
+    private String extractPhoneNumber(String phoneNumber) {
+        return phoneNumber.replaceAll(
+            "@.*",
+            ""
+        );
+    }
 
 }
 

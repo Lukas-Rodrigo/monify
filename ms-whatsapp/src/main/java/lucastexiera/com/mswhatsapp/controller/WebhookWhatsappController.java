@@ -1,10 +1,7 @@
 package lucastexiera.com.mswhatsapp.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lucastexiera.com.mswhatsapp.dto.Chatbot.ChatBotResponse;
-import lucastexiera.com.mswhatsapp.dto.TemporaryDTO;
-import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsappWebhookRequest;
+import lucastexiera.com.mswhatsapp.dto.whatsapp.WhatsAppMessageRequest;
 import lucastexiera.com.mswhatsapp.service.WhatsappService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,11 +41,10 @@ public class WebhookWhatsappController {
     }
 
     @PostMapping
-    public ResponseEntity<ChatBotResponse> receiveWhatsappMessage(@Valid @NotNull @RequestBody TemporaryDTO payload) {
-        log.info("Received whatsapp message, {}", payload);
-        var message = whatsappService.temporaryProcessIncomingMessage(payload);
-        log.info("Message chatbot: {}", message);
-        return ResponseEntity.ok(message);
+    public ResponseEntity<ChatBotResponse> receiveWhatsappMessage(
+        @RequestBody WhatsAppMessageRequest payload
+    ) {
+        return ResponseEntity.ok().body(whatsappService.processIncomingMessage(payload));
     }
 
 }
