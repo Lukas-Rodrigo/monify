@@ -2,16 +2,14 @@ services:
   eureka-server:
     image: lucas607/monify-eureka-server:latest
     build: ./monify-eureka-server
-    ports:
-      - "8761:8761"
+    container_name: ms-eureka-server
     networks:
       - app-network
 
   ms-users:
     image: lucas607/monify-ms-users:latest
     build: ./ms-users
-    ports:
-      - "8084:8084"
+    container_name: ms-users
     depends_on:
       - eureka-server
       - postgres
@@ -25,8 +23,7 @@ services:
   ms-chatbot-openai:
     image: lucas607/monify-ms-chatbot-openai:latest
     build: ./ms-chatbot-openAi
-    ports:
-      - "8082:8082"
+    container_name: ms-chatbot
     depends_on:
       - eureka-server
       - postgres
@@ -40,8 +37,7 @@ services:
   ms-finance-monify:
     image: lucas607/monify-ms-finance-monify:latest
     build: ./ms-finance-monify
-    ports:
-      - "8083:8083"
+    container_name: db_monify
     depends_on:
       - eureka-server
       - postgres
@@ -55,6 +51,7 @@ services:
   ms-monify-gateway:
     image: lucas607/monify-ms-monify-gateway:latest
     build: ./ms-monify-gateway
+    container_name: ms-gateway
     ports:
       - "8080:8080"
     depends_on:
@@ -65,10 +62,10 @@ services:
   ms-whatsapp:
     image: lucas607/monify-ms-whatsapp:latest
     build: ./ms-whatsapp
-    ports:
-      - "8081:8081"
+    container_name: ms-whatsapp
     depends_on:
       - eureka-server
+      - wppconnect-server
     networks:
       - app-network
 
@@ -82,14 +79,23 @@ services:
       POSTGRES_PASSWORD: admin
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     networks:
       - app-network
 
-volumes:
-  wpp-data:
-  pgdata:
+
+  wppconnect-server:
+    image: lucas607/wpp-connect:monify-configs
+    build: ./wppconnect-server
+    container_name: wppconnect-server
+    hostname: wppconnect-server
+    entrypoint: yarn dev
+    ports:
+      - "21465:21465"
+    environment:
+      - SECRET_KEY=thismykey
+    networks:
+      - app-network
+
 
 networks:
   app-network:

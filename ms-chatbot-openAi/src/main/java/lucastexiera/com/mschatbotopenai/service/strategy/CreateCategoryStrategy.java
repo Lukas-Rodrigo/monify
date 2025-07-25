@@ -14,10 +14,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CreateCategoryStrategy implements ChatBotFunctionStrategy {
 
-    private final ToolHandleService functionHandlerService;
+  private final ToolHandleService functionHandlerService;
 
-    @Override
-    public ChatbotMessage handle(OpenAiMessageResponse openAiResponse, List<CategoryDTO> userCategories, WhatsappUserMessageResponse userMessage) throws JsonProcessingException {
-        return functionHandlerService.saveNewCategory(openAiResponse, userMessage.from());
-    }
+  @Override
+  public ChatbotMessage handle(
+      OpenAiMessageResponse openAiResponse, List<CategoryDTO> userCategories,
+      WhatsappUserMessageResponse userMessage
+  ) {
+    return functionHandlerService.saveNewCategory(
+        openAiResponse,
+        userMessage.from()
+    );
+  }
 }

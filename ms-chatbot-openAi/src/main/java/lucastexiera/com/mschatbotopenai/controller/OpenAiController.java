@@ -28,6 +28,5 @@ public class OpenAiController {
     ) {
         var MessageToUse = openAiService.sendMessageOpenAi(payload);
         return ResponseEntity.ok(MessageToUse);
-
     }
 }

@@ -1,14 +1,13 @@
 package lucastexiera.com.mschatbotopenai.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.PostConstruct;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageRequest;
 import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
-import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory;
+import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResponse;
-import lucastexiera.com.mschatbotopenai.service.strategy.CreateCategoryStrategy;
-import lucastexiera.com.mschatbotopenai.service.strategy.SaveNewExpenseStrategy;
-import lucastexiera.com.mschatbotopenai.service.strategy.UpdateLastExpense;
+import lucastexiera.com.mschatbotopenai.service.strategy.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
+
+import static lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory.instanceOpenAiMessage;
 
 @Service
 public class OpenAiService {
@@ -41,7 +43,12 @@ public class OpenAiService {
     @Autowired
     private UsersService usersService;
 
+    @Autowired
+    private ProcessUserMessageService userMessageService;
+
     private Map<String, ChatBotFunctionStrategy> mapStrategy;
+    private Map<String, TypeMessageStrategy> typeMessageMapStrategy;
+
 
     @PostConstruct
     public void init() {
@@ -53,18 +60,30 @@ public class OpenAiService {
             "update_last_expense",
             new UpdateLastExpense(functionHandlerService)
         );
+
+        typeMessageMapStrategy = Map.of(
+            "normalMessage",
+            new ProcessNormalMessageStrategy(userMessageService),
+            "toolMessage",
+            new ProcessToolMessageStrategy(userMessageService)
+        );
+
+
     }
 
-    public ChatbotMessage sendMessageOpenAi(WhatsappUserMessageResponse userMessage) {
+    public ChatbotMessage sendMessageOpenAi(
+        WhatsappUserMessageResponse userMessage
+    ){
         var userListCategories = usersService.findCategoriesByPhoneNumber(userMessage.from());
-        log.info("userListCategories={}", userListCategories);
-
-        conversationService.saveUserMessage(userMessage.from(), userMessage.message());
-        var userConversation = conversationService.getRecentMessagesByUserPhoneNumber(userMessage.from(), 2);
-        var request = OpenAiRequestFactory.instance(userConversation, userListCategories);
-
+        conversationService.saveUserMessage(
+            userMessage.from(),
+            userMessage.message()
+        );
+        var request = processRequest(
+            userMessage,
+            userListCategories
+        );
         HttpEntity<OpenAiMessageRequest> requestHttpEntity = new HttpEntity<>(request);
-
         var openAiResponse = restTemplate
             .exchange(
                 OPENAI_URL,
@@ -74,41 +93,49 @@ public class OpenAiService {
             )
             .getBody();
 
+        String typeMessage = checkMessageType(openAiResponse);
+
+        return typeMessageMapStrategy
+            .get(typeMessage)
+            .handleTypeMessage(
+                openAiResponse,
+                userMessage,
+                userListCategories
+            );
+
+
+    }
+
+    private OpenAiMessageRequest processRequest(
+        WhatsappUserMessageResponse userMessage,
+        List<CategoryDTO> userListCategories
+    ) {
+
+        var userConversation = conversationService.getRecentMessagesByUserPhoneNumber(
+            userMessage.from(),
+            2
+        );
+
+        return instanceOpenAiMessage(
+            userConversation,
+            userListCategories
+        );
+
+    }
+
+    private String checkMessageType(OpenAiMessageResponse openAiResponse) {
+        String typeMessage = "normalMessage";
         var typeOpenAIMessage = openAiResponse
             .choices()
             .get(0)
             .message()
             .content();
-        log.info("OpenAI Message Type: {}", typeOpenAIMessage);
         if (typeOpenAIMessage == null) {
-            var typeFunctionCall = openAiResponse
-                .choices()
-                .get(0)
-                .message()
-                .tool_calls()
-                .get(0)
-                .function()
-                .name();
-            log.info("function type, {}", typeFunctionCall);
-            try {
-                return mapStrategy
-                    .get(typeFunctionCall)
-                    .handle(
-                        openAiResponse,
-                        userListCategories,
-                        userMessage
-                    );
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            typeMessage = "toolMessage";
         }
-        var chatbotMessage = new ChatbotMessage(typeOpenAIMessage);
-
-        conversationService.saveAssistantMessage(userMessage.from(), chatbotMessage.message());
-        log.info("Normal Conversation={}", chatbotMessage.message());
-        return chatbotMessage;
-
+        return typeMessage;
     }
 
+
 }
+

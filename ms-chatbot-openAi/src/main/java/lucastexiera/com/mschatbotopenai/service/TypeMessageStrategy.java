@@ -8,9 +8,10 @@ import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.WhatsappUserMessageResp
 
 import java.util.List;
 
-public interface ChatBotFunctionStrategy {
-  ChatbotMessage handle(
-      OpenAiMessageResponse openAiResponse, List<CategoryDTO> userCategories,
-      WhatsappUserMessageResponse userMessage
-  );
+public interface TypeMessageStrategy {
+
+  ChatbotMessage handleTypeMessage(OpenAiMessageResponse openAiMessageResponse,
+                                   WhatsappUserMessageResponse userMessage,
+                                   List<CategoryDTO> userListCategories
+                                  );
 }

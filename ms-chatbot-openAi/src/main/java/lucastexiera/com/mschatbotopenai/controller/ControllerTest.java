@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory.instance;
+import static lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiRequestFactory.instanceOpenAiMessage;
 
 @RestController
 @RequestMapping("/mapeamento")
@@ -42,6 +42,6 @@ public class ControllerTest {
 
     var userCategories = financeClient.findCategoriesByUserId(9L).getBody();
     log.info(userCategories.toString());
-    return instance(conversation, userCategories);
+    return instanceOpenAiMessage(conversation, userCategories);
   }
 }

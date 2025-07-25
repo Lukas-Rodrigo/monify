@@ -15,10 +15,18 @@ import java.util.List;
 public class SaveNewExpenseStrategy implements ChatBotFunctionStrategy {
 
 
-    private final ToolHandleService functionHandlerService;
+  private final ToolHandleService functionHandlerService;
 
-    @Override
-    public ChatbotMessage handle(OpenAiMessageResponse openAiResponse, List<CategoryDTO> userListCategories, WhatsappUserMessageResponse userMessage) throws JsonProcessingException {
-        return functionHandlerService.SaveNewExpense(openAiResponse, userListCategories, userMessage.from());
-    }
+  @Override
+  public ChatbotMessage handle(
+      OpenAiMessageResponse openAiResponse,
+      List<CategoryDTO> userListCategories,
+      WhatsappUserMessageResponse userMessage
+  )  {
+    return functionHandlerService.SaveNewExpense(
+        openAiResponse,
+        userListCategories,
+        userMessage.from()
+    );
+  }
 }

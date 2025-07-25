@@ -17,7 +17,8 @@ public class UpdateLastExpense implements ChatBotFunctionStrategy {
     private final ToolHandleService functionHandlerService;
 
     @Override
-    public ChatbotMessage handle(OpenAiMessageResponse openAiResponse, List<CategoryDTO> userCategories, WhatsappUserMessageResponse userMessage) throws JsonProcessingException {
+    public ChatbotMessage handle(OpenAiMessageResponse openAiResponse,
+                                 List<CategoryDTO> userCategories, WhatsappUserMessageResponse userMessage){
         return functionHandlerService.updateLastCategory(openAiResponse, userCategories, userMessage.from());
     }
 }

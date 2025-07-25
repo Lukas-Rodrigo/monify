@@ -67,7 +67,7 @@ public class OpenAiRequestFactory {
 
   private static final Logger log = LoggerFactory.getLogger(OpenAiRequestFactory.class);
 
-  public static OpenAiMessageRequest instance(List<ChatMessage> conversation, List<CategoryDTO> userCategories) {
+  public static OpenAiMessageRequest instanceOpenAiMessage(List<ChatMessage> conversation, List<CategoryDTO> userCategories) {
 
     String formattedCategories = userCategories.stream()
             .map(cat -> "- " + "category_id:" + cat.category_id() + " name: " + cat.name())

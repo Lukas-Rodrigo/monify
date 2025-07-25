@@ -147,7 +147,9 @@ public class AnswersForUsersService {
                 openAiUrl,
                 HttpMethod.POST,
                 entity,
-                OpenAiMessageResponse.class).getBody();
+                OpenAiMessageResponse.class
+                           )
+                           .getBody();
     }
 
     private String formatCurrency(Number value) {

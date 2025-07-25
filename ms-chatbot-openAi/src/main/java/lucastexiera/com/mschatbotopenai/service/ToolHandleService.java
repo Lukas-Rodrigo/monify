@@ -6,6 +6,7 @@ import lucastexiera.com.mschatbotopenai.dto.chatbot.OpenAiMessageResponse;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.CategoryDTO;
 import lucastexiera.com.mschatbotopenai.dto.financemonify.ExpenseDTO;
 import lucastexiera.com.mschatbotopenai.dto.userwhatsapp.ChatbotMessage;
+import lucastexiera.com.mschatbotopenai.exceptions.InvalidJsonFormatException;
 import lucastexiera.com.mschatbotopenai.infra.openfeign.FinanceClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,105 +19,205 @@ import java.util.List;
 public class ToolHandleService {
 
 
-    private static final Logger log = LoggerFactory.getLogger(ToolHandleService.class);
+  private static final Logger log = LoggerFactory.getLogger(ToolHandleService.class);
 
-    @Autowired
-    private FinanceClient financeClient;
-
-
-    @Autowired
-    private ConversationService conversationService;
-
-    @Autowired
-    private AnswersForUsersService answersForUsersService;
-
-    @Autowired
-    private UsersService usersService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  @Autowired
+  private FinanceClient financeClient;
 
 
-    public ChatbotMessage SaveNewExpense(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories, String from) throws JsonProcessingException {
-        var expenseToBeSavedJson = OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
-        var userId = usersService.findUserIDByPhoneNumber(from);
+  @Autowired
+  private AnswersForUsersService answersForUsersService;
 
-        var expenseToBeSaved = objectMapper.readValue(expenseToBeSavedJson, ExpenseDTO.class);
+  @Autowired
+  private UsersService usersService;
 
-        log.info("Expense To Be Saved: {}", expenseToBeSaved);
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-        if (!validateCategory(userListCategories, expenseToBeSaved)) {
-            throw new RuntimeException("Categoria invalida");
-        }
-        var categoryName = hasNameCategoryReturn(userListCategories, expenseToBeSaved);
 
-        financeClient.saveNewExpense(expenseToBeSaved, userId);
-        var chatbotMessage = answersForUsersService.confirmNewExpense(expenseToBeSaved, categoryName);
-        conversationService.saveAssistantMessage(from, chatbotMessage.message());
+  public ChatbotMessage SaveNewExpense(
+      OpenAiMessageResponse OpenAiResponse,
+      List<CategoryDTO> userListCategories, String from
+  ) {
+    var expenseToBeSavedJson = OpenAiResponse
+        .choices()
+        .get(0)
+        .message()
+        .tool_calls()
+        .get(0)
+        .function()
+        .arguments();
+    var userId = usersService.findUserIDByPhoneNumber(from);
 
-        return chatbotMessage;
+    var expenseToBeSaved = parseJson(expenseToBeSavedJson, ExpenseDTO.class);
+
+    log.info(
+        "Expense To Be Saved: {}",
+        expenseToBeSaved
+    );
+
+    if (!validateCategory(
+        userListCategories,
+        expenseToBeSaved
+    )) {
+      throw new RuntimeException("Categoria invalida");
     }
+    var categoryName = hasNameCategoryReturn(
+        userListCategories,
+        expenseToBeSaved
+    );
 
-    public ChatbotMessage updateLastCategory(OpenAiMessageResponse OpenAiResponse, List<CategoryDTO> userListCategories ,String from) throws JsonProcessingException {
-        var userId = usersService.findUserIDByPhoneNumber(from);
+    financeClient.saveNewExpense(
+        expenseToBeSaved,
+        userId
+    );
+    return answersForUsersService.confirmNewExpense(
+        expenseToBeSaved,
+        categoryName
+    );
 
-        var expenseTolBeUpdateJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();;
+  }
 
-        var expenseToBeUpdate = objectMapper.readValue(expenseTolBeUpdateJson, ExpenseDTO.class);
+  public ChatbotMessage updateLastCategory(
+      OpenAiMessageResponse OpenAiResponse,
+      List<CategoryDTO> userListCategories, String from
+  ) {
+    var userId = usersService.findUserIDByPhoneNumber(from);
 
-        var categoryName = hasNameCategoryReturn(userListCategories, expenseToBeUpdate);
+    var expenseTolBeUpdateJson = OpenAiResponse
+        .choices()
+        .get(0)
+        .message()
+        .tool_calls()
+        .get(0)
+        .function()
+        .arguments();
+    ;
 
-        financeClient.updateLastExpense(userId ,expenseToBeUpdate);
-        log.info("Category a ser atualizada: {}", expenseTolBeUpdateJson);
+    var expenseToBeUpdate = parseJson(
+        expenseTolBeUpdateJson,
+        ExpenseDTO.class
+    );
 
-        var chatbotMessage = answersForUsersService.confirmUpdateExpense(expenseToBeUpdate,categoryName);
-        conversationService.saveAssistantMessage(from, chatbotMessage.message());
-        return chatbotMessage;
+    var categoryName = hasNameCategoryReturn(
+        userListCategories,
+        expenseToBeUpdate
+    );
 
+    financeClient.updateLastExpense(
+        userId,
+        expenseToBeUpdate
+    );
+    log.info(
+        "Category a ser atualizada: {}",
+        expenseTolBeUpdateJson
+    );
+
+    return answersForUsersService.confirmUpdateExpense(
+        expenseToBeUpdate,
+        categoryName
+    );
+
+  }
+
+
+  public ChatbotMessage saveNewCategory(
+      OpenAiMessageResponse OpenAiResponse,
+      String from
+  ) {
+    var userId = usersService.findUserIDByPhoneNumber(from);
+    var categoryTolBeSavedJson = OpenAiResponse
+        .choices()
+        .get(0)
+        .message()
+        .tool_calls()
+        .get(0)
+        .function()
+        .arguments();
+
+    var expenseToBeSaved = parseJson(
+        categoryTolBeSavedJson,
+        CategoryDTO.class
+    );
+
+    financeClient.saveNewCategory(
+        expenseToBeSaved,
+        userId
+    );
+    log.info(
+        "Category a ser salva: {}",
+        categoryTolBeSavedJson
+    );
+
+    return answersForUsersService.confirmNewCategory(expenseToBeSaved);
+  }
+
+  public ChatbotMessage deleteCategory(
+      OpenAiMessageResponse OpenAiResponse,
+      String from
+  ) {
+    var categoryTolBeDeletedJson = OpenAiResponse
+        .choices()
+        .get(0)
+        .message()
+        .tool_calls()
+        .get(0)
+        .function()
+        .arguments();
+
+    var expenseToBeDeleted = parseJson(
+        categoryTolBeDeletedJson,
+        CategoryDTO.class
+    );
+
+    financeClient.deleteCategory(expenseToBeDeleted);
+    log.info(
+        "Category a ser excluida: {}",
+        expenseToBeDeleted
+    );
+
+    return answersForUsersService.confirmDeleteCategory(expenseToBeDeleted);
+  }
+
+
+  public boolean validateCategory(
+      List<CategoryDTO> userListCategories, ExpenseDTO expenseToBeSaved) {
+    return userListCategories
+        .stream()
+        .anyMatch(c -> c
+            .category_id()
+            .equals(expenseToBeSaved.category_id()));
+  }
+
+  public CategoryDTO hasNameCategoryReturn(
+      List<CategoryDTO> userCategories, ExpenseDTO newExpense) {
+    return userCategories
+        .stream()
+        .filter(category -> category
+            .category_id()
+            .equals(newExpense.category_id()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private <T> T parseJson(String json, Class<T> valueType) {
+    try {
+      return objectMapper.readValue(
+          json,
+          valueType
+      );
+    } catch (JsonProcessingException e) {
+      log.error(
+          "Erro ao converter JSON para {}: {}",
+          valueType.getSimpleName(),
+          json,
+          e
+      );
+      throw new InvalidJsonFormatException(
+          "Erro ao processar a requisição. " +
+              "JSON inválido.",
+          e
+      );
     }
-
-
-    public ChatbotMessage saveNewCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
-        var userId = usersService.findUserIDByPhoneNumber(from);
-        var categoryTolBeSavedJson =  OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();
-
-        var expenseToBeSaved = objectMapper.readValue(categoryTolBeSavedJson, CategoryDTO.class);
-
-        financeClient.saveNewCategory(expenseToBeSaved, userId);
-        log.info("Category a ser salva: {}", categoryTolBeSavedJson);
-
-        var chatbotMessage = answersForUsersService.confirmNewCategory(expenseToBeSaved);
-        conversationService.saveAssistantMessage(from, chatbotMessage.message());
-        return chatbotMessage;
-
-    }
-
-    public ChatbotMessage deleteCategory(OpenAiMessageResponse OpenAiResponse, String from) throws JsonProcessingException {
-        var categoryTolBeDeletedJson = OpenAiResponse.choices().get(0).message().tool_calls().get(0).function().arguments();;
-
-
-        var expenseToBeDeleted = objectMapper.readValue(categoryTolBeDeletedJson, CategoryDTO.class);
-
-        financeClient.deleteCategory(expenseToBeDeleted);
-        log.info("Category a ser excluida: {}", expenseToBeDeleted);
-
-        var chatbotMessage = answersForUsersService.confirmDeleteCategory(expenseToBeDeleted);
-        conversationService.saveAssistantMessage(from, chatbotMessage.message());
-        return chatbotMessage;
-
-    }
-
-
-
-    public boolean validateCategory(List<CategoryDTO> userListCategories, ExpenseDTO expenseToBeSaved) {
-        return userListCategories.stream()
-                .anyMatch(c -> c.category_id().equals(expenseToBeSaved.category_id()));
-    }
-
-    public CategoryDTO hasNameCategoryReturn(List<CategoryDTO> userCategories, ExpenseDTO newExpense) {
-        return userCategories.stream()
-                .filter(category -> category.category_id().equals(newExpense.category_id()))
-                .findFirst()
-                .orElse(null);
-    }
+  }
 
 }

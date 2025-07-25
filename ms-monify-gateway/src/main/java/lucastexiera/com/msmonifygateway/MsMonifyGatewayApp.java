@@ -22,6 +22,7 @@ public class MsMonifyGatewayApp {
         return builder
                 .routes()
                 .route(r -> r.path("/v1/webhook/whatsapp/**").uri("lb://msWhatsapp"))
+                .route(r -> r.path("/v1/whatsapp/**").uri("lb://msWhatsapp"))
                 .route(r -> r.path("/v1/chatbot/message/**").uri("lb://ms-chatbot-openAi"))
                 .route(r -> r.path("/v1/finance/category/**").uri("lb://ms-finance-monify"))
                 .route(r -> r.path("/v1/finance/expense/**").uri("lb://ms-finance-monify"))

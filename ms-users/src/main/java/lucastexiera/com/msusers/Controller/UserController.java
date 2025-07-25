@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class UserController {
 
-
     @Autowired
     private UserService userService;
 
